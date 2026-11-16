@@ -497,20 +497,46 @@ a { color: var(--accent); }
   touch-action: manipulation;
 }
 .voice-pill {
+  position: relative;
   width: min(150px, 40vw);
   height: 72px;
   border-radius: 36px;
-  background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 40%, #7FCFC1 75%, #0F7B6C 100%);
+  overflow: hidden;
+  background: #FFFFFF;
   box-shadow: 0 8px 28px rgba(15, 123, 108, 0.35);
-  opacity: .7;
+  opacity: .75;
   transition: opacity .3s;
 }
-/* 듣는 중: 숨 쉬듯 커졌다 작아진다 */
-.voice-panel.listening .voice-pill { animation: pill-breathe 2.2s ease-in-out infinite; }
-@keyframes pill-breathe {
-  0%, 100% { transform: scale(1); opacity: .82; box-shadow: 0 8px 28px rgba(15, 123, 108, 0.30); }
-  50% { transform: scale(1.07); opacity: 1; box-shadow: 0 10px 38px rgba(15, 123, 108, 0.50); }
+/* 알약 안의 초록 그라데이션: 가로로 이어지는 무늬 두 겹이 서로 다른 속도로 흘러 물결처럼 보인다.
+   크기는 변하지 않는다. 듣는 중이 아닐 때는 멈춰 있다. */
+.voice-pill::before,
+.voice-pill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  animation: pill-flow 3.2s linear infinite;
+  animation-play-state: paused;
+  will-change: transform;
 }
+/* 아래쪽 초록 띠: 진한 초록과 연한 초록이 번갈아 흐른다 */
+.voice-pill::before {
+  background: linear-gradient(90deg, #0F7B6C 0%, #7FCFC1 25%, #0F7B6C 50%, #7FCFC1 75%, #0F7B6C 100%);
+}
+/* 위쪽 흰 부분: 경계가 물결 모양으로 오르내리며 반대 방향으로 천천히 흐른다 */
+.voice-pill::after {
+  background:
+    radial-gradient(ellipse 50% 46% at 50% 22%, #FFFFFF 0%, #FFFFFF 55%, rgba(255, 255, 255, 0) 100%) 0 0 / 25% 100% repeat-x,
+    linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 30%, rgba(255, 255, 255, 0.55) 55%, rgba(255, 255, 255, 0) 90%);
+  animation-duration: 5.6s;
+  animation-direction: reverse;
+}
+.voice-panel.listening .voice-pill { opacity: 1; }
+.voice-panel.listening .voice-pill::before,
+.voice-panel.listening .voice-pill::after { animation-play-state: running; }
+@keyframes pill-flow { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ===== 채팅 위를 덮는 전체 화면 (다운로드·결제·리포트) ===== */
 .overlay {

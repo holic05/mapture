@@ -58,7 +58,7 @@ python3 -m http.server 8000
 4. 확인할 것
    - DevTools → **Application** 탭 → **Manifest**: 이름·아이콘이 보이고 오류가 없는지
    - **Application → Service workers**: `sw.js`가 *activated and is running*인지
-   - **Application → Cache storage**: `mapture-v3`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
+   - **Application → Cache storage**: `mapture-v4`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
    - **Network** 탭에서 *Offline* 체크 후 새로고침 → 그래도 열리는지
 
 > 개발 중에는 **Application → Service workers → "Update on reload"**를 체크해 두면
@@ -102,7 +102,7 @@ python3 -m http.server 8000
 | 고친 것 | 할 일 |
 |---|---|
 | `scenes.json`만 | 그냥 push. 앱을 다시 열면 반영됩니다 (scenes.json은 항상 네트워크 먼저 받아옴). |
-| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v3'` → `'v4'`) push. |
+| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v4'` → `'v5'`) push. |
 
 `CACHE_VERSION`을 올린 뒤 폰에서:
 
@@ -131,6 +131,7 @@ python3 -m http.server 8000
 - **음성 씬:** 마이크 버튼을 탭하면 음성 모드(아래쪽이 초록빛으로 번지고 `Listening…`)가 됩니다.
   그 상태에서 **화면 아무 곳이나 한 번 더 탭**하면 질문이 올라가고 답변이 이어집니다.
   음성 모드는 다음 질문을 위해 계속 켜져 있고, X를 누르면 일반 입력창으로 돌아갑니다.
+  `scenes.json`에서 그 질문에 `autoSubmit`(초)을 적어 두면 탭하지 않아도 그 시간 뒤에 저절로 올라갑니다.
 - **답변 출력 중** 말풍선을 탭하면 남은 글자가 즉시 전부 표시됩니다.
 - **S#4:** 스토어 화면 → `Download`(약 2초) → `Open` → 실행 애니메이션 → 채팅. 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
 - **결제:** 요금 카드를 탭해 고르고 `Subscribe for …` → 완료 화면 → `Start predicting`. 이후 상단 플랜이 `Premium`으로 바뀝니다.
@@ -150,8 +151,11 @@ python3 -m http.server 8000
 |---|---|
 | 시간 구분선 | `{"type":"divider","time":"now"}` |
 | 타이핑 질문 | `{"type":"user","input":"typing","text":"...","sendDisabled":false}` |
-| 음성 질문 | `{"type":"user","input":"voice","text":"..."}` |
+| 음성 질문 | `{"type":"user","input":"voice","text":"...","autoSubmit":3}` |
 | 맵쳐 답변 | `{"type":"mapture", ...}` 아래 항목을 필요한 것만 |
+
+음성 질문의 `autoSubmit`(초, 생략 가능): 음성 모드에서 `Listening…`이 뜬 뒤 그 시간이 지나면 질문이 저절로 올라갑니다.
+그 전에 탭하면 즉시 올라갑니다. 값이 없으면 탭으로만 올라갑니다. (음성 모드에 들어가는 마이크 탭은 항상 필요)
 
 맵쳐 답변 항목:
 
@@ -203,3 +207,13 @@ python3 -m http.server 8000                      # 다른 터미널에서
 ```
 
 실제 Gboard의 동작과 진짜 키보드 애니메이션은 흉내만 내므로, 최종 확인은 폰에서 해야 합니다.
+
+---
+
+## 나중에 할 것 (메모)
+
+- **이어 붙은 대화창:** 씬마다 빈 화면에서 시작하지 않고, 앞 씬들의 대화가 이어진 같은 대화창으로 보이게.
+  붙일 자리는 `js/engine.js`의 `historyFor()`.
+- **다운로드 진행 속도 조절:** 지금 약 2초(살짝 빠름). 촬영하며 맞출 수 있게 `scenes.json`에서 바꿀 수 있게.
+  지금은 `js/views/download.js`의 `DOWNLOAD_MS`.
+- **앱 열리는 모션:** `Open`을 누르면 실제 폰처럼 아이콘 위치에서 앱 화면이 확대되며 열리게.

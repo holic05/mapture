@@ -85,6 +85,7 @@ export function createChat(root, hooks = {}) {
   let scene = null;
   let loadingEl = null;
   let voiceOn = false;
+  let autoTimer = 0; // 음성 질문 자동 올리기(autoSubmit) 타이머
   /** 지금 기다리는 사용자 단계. { step, n, resolve } 또는 null */
   let pending = null;
 
@@ -312,7 +313,23 @@ export function createChat(root, hooks = {}) {
   function renderVoice() {
     const listening = voicePending();
     refs.voice.classList.toggle('listening', listening);
-    refs.voiceStatus.textContent = listening ? 'Listening…' : ' ';
+    refs.voiceStatus.textContent = listening ? 'Listening…' : '\u00A0';
+    armAutoSubmit();
+  }
+
+  // 음성 단계에 autoSubmit(초)이 있으면, 음성 모드에서 듣기 시작한 뒤 그 시간이 지나면 질문이 저절로 올라간다.
+  // 그 전에 탭하면 즉시 올라가고, 값이 없으면 탭으로만 올라간다.
+  function armAutoSubmit() {
+    clearTimeout(autoTimer);
+    autoTimer = 0;
+    if (!voiceOn || !voicePending()) return;
+    const seconds = Number(pending.step.autoSubmit);
+    if (!(seconds > 0)) return;
+    const waitingFor = pending;
+    autoTimer = setTimeout(() => {
+      autoTimer = 0;
+      if (pending === waitingFor && voiceOn) finishPending();
+    }, seconds * 1000);
   }
 
   screen.addEventListener('click', (e) => {

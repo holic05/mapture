@@ -423,6 +423,48 @@ def t_voice_x(run):
     page.context.close()
 
 
+def t_autosubmit(run):
+    """음성 단계의 autoSubmit(초): 음성 모드 진입 후 그 시간이 지나면 자동으로 올라간다"""
+    def with_auto(route):
+        data = json.loads(route.fetch().text())
+        scene = next(s for s in data["scenes"] if s["id"] == "S06")
+        for st in scene["steps"]:
+            if st.get("input") == "voice":
+                st["autoSubmit"] = 1.5
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+
+    page = run.page(False)
+    page.route("**/scenes.json*", with_auto)
+    run.open(page, "S06")
+    page.wait_for_timeout(2200)
+    check("autoSubmit does not start before voice mode is on", page.locator(".bubble-user").count() == 0)
+    page.tap(".mic")
+    page.wait_for_timeout(900)
+    check("autoSubmit: not yet sent at 0.9s", page.locator(".bubble-user").count() == 0)
+    moving = page.evaluate("""async () => { const el = document.querySelector('.voice-pill');
+      const x = () => new DOMMatrix(getComputedStyle(el, '::before').transform).m41, box = () => el.getBoundingClientRect().width;
+      const a = [x(), box()]; await new Promise(r => setTimeout(r, 250)); const b = [x(), box()];
+      return a[0] !== b[0] && a[1] === b[1]; }""")
+    check("pill: gradient flows, size stays the same", moving)
+    run.shot(page, "voice-pill-flow")
+    page.wait_for_selector(".bubble-user", timeout=1500)
+    check("autoSubmit: question goes up by itself after 1.5s", page.locator(".bubble-user.voice").count() == 1)
+    # 두 번째 질문: 음성 모드가 유지된 채 차례가 오면 그때부터 다시 센다. 그 전에 탭하면 즉시.
+    page.wait_for_function("document.querySelector('.voice-panel').classList.contains('listening')", timeout=30000, polling=100)
+    page.tap(".voice-pill", force=True)
+    page.wait_for_timeout(200)
+    check("tap before the timer sends immediately", page.locator(".bubble-user").count() == 2)
+    page.wait_for_timeout(2000)
+    check("...and the cancelled timer does not fire later", page.locator(".bubble-user").count() == 2)
+    # X로 나가면 자동 올리기도 취소
+    page.wait_for_function("document.querySelector('.voice-panel').classList.contains('listening')", timeout=40000, polling=100)
+    page.tap(".voice-x")
+    page.wait_for_timeout(2200)
+    check("leaving voice mode cancels autoSubmit", page.locator(".bubble-user").count() == 2)
+    check("no page errors", not page.errors, page.errors)
+    page.context.close()
+
+
 def t_paywall(run):
     """S#5: 결제 화면으로 시작, 요금 카드 전환, 결제 → 완료 → 빈 채팅(Premium)"""
     for w, h in [(360, 740), (390, 844), (430, 932)]:
@@ -590,7 +632,7 @@ def t_pwa(run):
     page.context.close()
 
 
-TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "voice": t_voice, "voicex": t_voice_x,
+TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "voice": t_voice, "voicex": t_voice_x, "auto": t_autosubmit,
          "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "progress": t_progress, "json": t_json_error, "pwa": t_pwa}
 
 
