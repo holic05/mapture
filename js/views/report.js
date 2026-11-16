@@ -13,15 +13,15 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
  *   shownAt: 그 답변이 화면에 뜬 시각. askedAt이 "now"면 이 시각이 질문 시각이 된다.
  */
 export function showReport(root, report, ctx) {
+  // 기준 시각: 그 답변이 화면에 뜬 시각 (이어 붙은 앞 씬의 답변이면 그 씬의 시각)
+  const base = ctx.shownAt || ctx.sceneStart;
   // 질문 시각
-  let asked = report.askedAt === 'now' || report.askedAt == null
-    ? (ctx.shownAt || ctx.sceneStart)
-    : resolveTime(report.askedAt, ctx.sceneStart);
+  const asked = report.askedAt === 'now' || report.askedAt == null ? base : resolveTime(report.askedAt, base, base);
   const askedLabel = asked instanceof Date ? formatClock(asked) : String(asked);
-  // 예측 시각 "+17m"은 질문 시각 기준 (질문 시각이 글자면 씬 시작 기준)
-  const anchor = asked instanceof Date ? asked : ctx.sceneStart;
+  // 예측 시각 "+17m"은 질문 시각 기준 (질문 시각이 글자면 기준 시각)
+  const anchor = asked instanceof Date ? asked : base;
   const timeLabel = (v) => {
-    const t = resolveTime(v, anchor);
+    const t = resolveTime(v, anchor, anchor);
     return t instanceof Date ? formatClock(t) : (t ?? '');
   };
 

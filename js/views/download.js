@@ -2,8 +2,9 @@
 import { mascotSVG, faceSVG } from '../mascot.js';
 import { openOverlay, wait } from './overlay.js';
 
-const DOWNLOAD_MS = 2000;
-const LAUNCH_MS = 1100;
+const DEFAULT_DOWNLOAD_SECONDS = 3; // 씬의 downloadSeconds로 바꿀 수 있다
+const SWITCH_MS = 1000;             // 스토어 카드가 밀려 나가고 맵쳐 카드가 들어와 커지는 시간
+const SPLASH_MS = 1100;             // 마스코트 시작 화면
 
 const ICON = {
   back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1D1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
@@ -14,7 +15,8 @@ const ICON = {
 
 /**
  * @param {HTMLElement} root
- * @param {{onMenuLongPress?: Function, onLaunched?: Function}} hooks
+ * @param {{seconds?: number, onMenuLongPress?: Function, onLaunched?: Function}} hooks
+ *   seconds: 다운로드 진행 바가 차는 시간(초)
  *   onLaunched: 실행 애니메이션이 끝나 채팅 화면이 드러나는 순간
  */
 export function showDownload(root, hooks = {}) {
@@ -59,6 +61,7 @@ export function showDownload(root, hooks = {}) {
 
   const q = (ref) => ov.el.querySelector(`[data-ref=${ref}]`);
   const btn = q('btn');
+  const downloadMs = (Number(hooks.seconds) > 0 ? Number(hooks.seconds) : DEFAULT_DOWNLOAD_SECONDS) * 1000;
   let state = 'idle'; // idle → downloading → ready → launching
 
   btn.addEventListener('click', () => {
@@ -70,7 +73,7 @@ export function showDownload(root, hooks = {}) {
       const startedAt = performance.now();
       const tick = (now) => {
         if (!ov.alive()) return;
-        const p = Math.min(1, (now - startedAt) / DOWNLOAD_MS);
+        const p = Math.min(1, (now - startedAt) / downloadMs);
         // 실제 다운로드처럼 처음엔 빠르고 끝에서 살짝 느려진다
         const eased = 1 - Math.pow(1 - p, 1.6);
         q('fill').style.transform = `scaleX(${eased})`;
@@ -91,11 +94,29 @@ export function showDownload(root, hooks = {}) {
   return ov;
 }
 
-/** 실행 애니메이션: 흰 화면 가운데서 마스코트가 커지며 등장, 고리가 한 바퀴 돈다 (약 1초) */
+/**
+ * Open을 눌렀을 때의 전환 (iPhone에서 다른 앱이 열릴 때의 모션):
+ *  1) 스토어 화면이 둥근 모서리 카드로 살짝 작아지며 왼쪽으로 밀려 나간다
+ *  2) 어두운 배경을 사이에 두고 맵쳐 카드가 오른쪽에서 들어와 가운데서 전체 화면으로 커진다
+ *  3) 마스코트 시작 화면 (가운데서 커지며 등장, 고리 한 바퀴)
+ *  4) 채팅 인사 화면으로 넘어간다
+ */
 async function launch(root, hooks, store) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'overlay switch-backdrop';
+  root.appendChild(backdrop);
+  store.el.classList.add('switch-out');
   const splash = openOverlay(root, 'launch', `<div class="launch-mascot">${mascotSVG(128)}</div>`);
-  store.close(); // 흰 화면이 덮은 뒤 스토어 화면은 치운다
-  await wait(LAUNCH_MS);
+  splash.el.classList.add('switch-in');
+
+  await wait(SWITCH_MS);
+  if (!splash.alive()) return; // 도중에 씬이 바뀜 (closeOverlays가 전부 치웠다)
+  store.close();
+  backdrop.remove();
+  splash.el.classList.remove('switch-in');
+  splash.el.classList.add('show-mascot');
+
+  await wait(SPLASH_MS);
   if (!splash.alive()) return;
   hooks.onLaunched?.();
   splash.el.classList.add('leaving');

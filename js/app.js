@@ -1,5 +1,6 @@
 // 진입점: scenes.json 로딩, 씬 선택, 키보드 대응, Wake Lock, 서비스 워커 등록
 import { showFatal } from './fatal.js';
+import { installGuards } from './guard.js';
 import { Engine } from './engine.js';
 import { createChat } from './views/chat.js';
 import { openSceneMenu } from './views/sceneMenu.js';
@@ -10,6 +11,8 @@ import { showReport } from './views/report.js';
 
 const STORAGE_KEY = 'mapture.scene';
 const app = document.getElementById('app');
+
+installGuards();
 
 window.addEventListener('error', (e) => {
   if (/ResizeObserver/.test(e.message || '')) return; // 브라우저의 무해한 경고
@@ -104,6 +107,8 @@ function validate(data) {
     if (!scene?.id) out.push(`scenes[${si}]: missing "id"`);
     else if (seen.has(scene.id)) out.push(`${name}: duplicate id`);
     seen.add(scene?.id);
+    if (scene?.after != null && !data.scenes.some((x) => x?.id === scene.after)) out.push(`${name}: "after" points to unknown scene "${scene.after}"`);
+    if (scene?.gap != null && !/^\s*\d+(\.\d+)?\s*[mhdwy]\s*$/.test(String(scene.gap))) out.push(`${name}: "gap" must look like "14h", "2d" or "2y"`);
     for (const key of ['history', 'steps']) {
       const steps = scene?.[key];
       if (steps == null) continue;
@@ -164,7 +169,11 @@ async function main() {
     if (scene.start === 'download') {
       // 스토어 화면 아래에 빈 채팅 화면을 준비해 두고, 실행 애니메이션이 끝날 때 씬을 시작한다
       chat.reset(scene);
-      showDownload(app, { onMenuLongPress: openMenu, onLaunched: () => engine.start(scene) });
+      showDownload(app, {
+        seconds: scene.downloadSeconds,
+        onMenuLongPress: openMenu,
+        onLaunched: () => engine.start(scene),
+      });
       return;
     }
     engine.start(scene);
@@ -177,7 +186,10 @@ async function main() {
   engine.scenes = scenes;
 
   // 우선순위: URL ?scene=S08 → 마지막으로 고른 씬 → 첫 번째 씬
-  const wanted = new URLSearchParams(location.search).get('scene');
+  const params = new URLSearchParams(location.search);
+  const wanted = params.get('scene');
+  // 개발용: ?solo=1 이면 앞 씬 대화를 이어 붙이지 않고 그 씬만 연다
+  engine.chainScenes = !params.has('solo');
   const find = (id) => id && scenes.find((s) => s.id.toLowerCase() === id.toLowerCase());
   if (wanted && !find(wanted)) {
     showFatal('Unknown scene', `?scene=${wanted}\n\nAvailable: ${scenes.map((s) => s.id).join(', ')}`);

@@ -212,12 +212,12 @@ export function createChat(root, hooks = {}) {
    * ctl.skip이 처음부터 true면(history) await 없이 한 번에 전부 그린다.
    * 순서: headline(한 번에) → 구분선 → body·list(한 글자씩) → disclaimer·button·report(한 번에)
    */
-  async function buildMapture(step, ctl, live) {
+  async function buildMapture(step, ctl, live, opts = {}) {
     const progress = isProgressUpdate(step);
     const el = h('div', 'bubble-mapture' + (progress ? ' progress' : ''));
     el.addEventListener('click', () => { ctl.skip = true; }); // 출력 중 탭 → 즉시 완성
     const cps = step.typingSpeed > 0 ? step.typingSpeed : DEFAULT_TYPING_SPEED;
-    const shownAt = live ? new Date() : null; // 리포트의 "질문 시각"에 쓰인다
+    const shownAt = live ? new Date() : (opts.shownAt || null); // 리포트의 "질문 시각"에 쓰인다
 
     // 글자를 넣는다. skip이면 동기, 아니면 타이핑(Promise)
     const put = (node, text) => {
@@ -256,7 +256,8 @@ export function createChat(root, hooks = {}) {
     if (step.button) {
       const btn = el.appendChild(h('button', 'bubble-btn', step.button.label || ''));
       btn.type = 'button';
-      btn.addEventListener('click', () => hooks.onAction?.(step.button.action, step));
+      // 앞 씬에서 이어 붙은 대화의 버튼은 모양만 남긴다 (이미 지난 일)
+      if (!opts.inert) btn.addEventListener('click', () => hooks.onAction?.(step.button.action, step));
     }
     if (step.report) {
       const link = el.appendChild(h('button', 'report-link', 'Detailed Analysis Report ›'));
@@ -266,8 +267,8 @@ export function createChat(root, hooks = {}) {
     scrollToBottom();
   }
 
-  function addMaptureInstant(step) {
-    buildMapture(step, { skip: true, alive: () => true }, false);
+  function addMaptureInstant(step, opts) {
+    buildMapture(step, { skip: true, alive: () => true }, false, opts);
   }
 
   function playMapture(step, alive) {

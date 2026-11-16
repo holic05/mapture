@@ -1,6 +1,6 @@
 // 씬 엔진: scenes.json의 씬 하나를 순서대로 재생한다.
 // 화면 그리기는 view(js/views/chat.js)가 맡고, 여기는 "지금 몇 번째 단계인가"만 관리한다.
-import { dividerLabel } from './time.js';
+import { dividerLabel, durationMs } from './time.js';
 
 const DEFAULT_LOADING_TEXT = 'One moment, please…';
 const DEFAULT_LOADING_SECONDS = 2;
@@ -20,6 +20,7 @@ export class Engine {
     this.timers = new Set();
     this.scene = null;
     this.scenes = [];        // 전체 씬 목록 (app.js가 넣어 준다)
+    this.chainScenes = true; // 앞 씬 대화 이어 붙이기 (?solo=1 이면 끔)
     this.sceneStart = new Date();
   }
 
@@ -31,14 +32,51 @@ export class Engine {
   }
 
   /**
-   * 씬 시작 시 애니메이션 없이 깔아 둘 메시지 목록.
-   * 지금은 그 씬의 history뿐이다.
-   * (예정) 앞 씬들의 대화를 이어 붙여 하나의 대화창처럼 보이게 하려면 여기서
-   * this.scenes(전체 씬 목록)를 보고 앞 씬의 history + steps를 앞에 붙여 돌려주면 된다.
-   * 아래 start()는 어떤 단계든 즉시 그릴 수 있으므로 다른 곳은 고칠 필요가 없다.
+   * 씬 시작 시 애니메이션 없이 깔아 둘 메시지 목록: 앞 씬들의 대화 + 이 씬의 history.
+   *
+   * 씬에 "after": "<앞 씬 id>"가 있으면 그 씬(과 그 앞의 앞 씬들)의 대화가 이어 붙어
+   * 하나의 대화창처럼 보인다. "gap"은 앞 씬으로부터 지난 시간("14h", "2d", "2y")이고,
+   * 앞 씬의 시간 구분선은 그만큼 과거의 시각으로 표시된다(날짜가 바뀌면 Yesterday / 요일 / 날짜).
+   *
+   * @returns {{step: object, base: Date, now: Date, chained: boolean}[]}
+   *   base: 그 단계가 속한 씬의 시작 시각, now: 그 단계의 "now"가 가리킬 시각
    */
   historyFor(scene) {
-    return scene.history || [];
+    // 앞 씬들을 오래된 순서로
+    const chain = [];
+    const seen = new Set([scene.id]);
+    for (let s = scene; this.chainScenes && s.after;) {
+      const prev = this.scenes.find((x) => x.id === s.after);
+      if (!prev || seen.has(prev.id)) break; // 없는 씬이거나 순환이면 여기까지
+      seen.add(prev.id);
+      chain.unshift(prev);
+      s = prev;
+    }
+
+    // 각 앞 씬의 시각: 지금 씬에서 gap만큼씩 거슬러 올라간다
+    const bases = new Map();
+    let t = this.sceneStart.getTime();
+    let later = scene;
+    for (let i = chain.length - 1; i >= 0; i--) {
+      t -= durationMs(later.gap);
+      bases.set(chain[i], new Date(t));
+      later = chain[i];
+    }
+
+    const out = [];
+    for (const prev of chain) {
+      const base = bases.get(prev);
+      let minutes = 0; // 그 씬 안에서 흐른 시간(질문 하나에 1분으로 어림) → 구분선 "now"가 조금씩 뒤로 간다
+      for (const step of [...(prev.history || []), ...(prev.steps || [])]) {
+        if (step.type === 'user' && step.sendDisabled) continue; // 보내지 못한 질문은 대화에 남지 않는다
+        out.push({ step, base, now: new Date(base.getTime() + minutes * 60e3), chained: true });
+        if (step.type === 'user') minutes++;
+      }
+    }
+    for (const step of scene.history || []) {
+      out.push({ step, base: this.sceneStart, now: this.sceneStart, chained: false });
+    }
+    return out;
   }
 
   /** 씬을 시작 상태로 완전히 리셋하고 재생 시작 */
@@ -53,11 +91,11 @@ export class Engine {
 
     this.view.reset(scene);
 
-    // history: 애니메이션 없이 즉시
-    for (const step of this.historyFor(scene)) {
-      if (step.type === 'divider') this.view.addDivider(dividerLabel(step.time, this.sceneStart));
+    // 앞 씬들의 대화 + history: 애니메이션 없이 즉시
+    for (const { step, base, now, chained } of this.historyFor(scene)) {
+      if (step.type === 'divider') this.view.addDivider(dividerLabel(step.time, base, now));
       else if (step.type === 'user') this.view.addUser(step.text, { voice: step.input === 'voice' });
-      else if (step.type === 'mapture') this.view.addMaptureInstant(step);
+      else if (step.type === 'mapture') this.view.addMaptureInstant(step, { shownAt: now, inert: chained });
     }
     this.view.scrollToBottom();
 

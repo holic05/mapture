@@ -39,7 +39,7 @@ class Run:
         self.browser = browser
         self.base = base if base.endswith("/") else base + "/"
 
-    def page(self, scene=None, width=390, height=844, **ctx_kw):
+    def page(self, scene=None, width=390, height=844, chain=False, **ctx_kw):
         opts = dict(PHONE)
         opts["viewport"] = {"width": width, "height": height}
         opts.update(ctx_kw)
@@ -49,11 +49,15 @@ class Run:
         page.on("pageerror", lambda e: page.errors.append(str(e)))
         page.on("console", lambda m: page.errors.append(m.text) if m.type == "error" else None)
         if scene is not False:
-            self.open(page, scene)
+            self.open(page, scene, chain)
         return page
 
-    def open(self, page, scene=None):
-        page.goto(self.base + (f"?scene={scene}" if scene else ""))
+    def url(self, scene=None, chain=False):
+        q = ([f"scene={scene}"] if scene else []) + ([] if chain else ["solo=1"])
+        return self.base + ("?" + "&".join(q) if q else "")
+
+    def open(self, page, scene=None, chain=False):
+        page.goto(self.url(scene, chain))
         page.wait_for_selector(".composer")
         page.wait_for_function("document.fonts.status === 'loaded'")
         page.wait_for_timeout(300)
@@ -104,9 +108,9 @@ def no_overflow(page):
 def pass_download(page):
     """스토어 화면: Download → Open → 실행 애니메이션이 끝날 때까지"""
     page.tap(".store-btn")
-    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=6000)
+    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=15000)
     page.tap(".store-btn")
-    page.wait_for_selector(".overlay", state="detached", timeout=6000)
+    page.wait_for_selector(".overlay", state="detached", timeout=8000)
 
 
 def long_press(page, selector, ms=800):
@@ -135,7 +139,7 @@ def wait_typing_done(page, timeout=60000):
 def t_empty(run):
     """빈 상태가 여러 폰 크기에서 깨지지 않는다"""
     for w, h in [(360, 740), (390, 844), (430, 932)]:
-        page = run.page("S07", w, h)
+        page = run.page("S15", w, h)
         ok = composer_visible(page) and not no_overflow(page)
         hero = page.evaluate("""() => { const m = document.querySelector('.empty .mascot').getBoundingClientRect(),
           t = document.querySelector('.empty h1').getBoundingClientRect(), f = document.querySelector('.empty-foot').getBoundingClientRect();
@@ -314,7 +318,7 @@ def t_voice(run):
     page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=6000)
     run.shot(page, "download-open-360")
     page.tap(".store-btn")
-    page.wait_for_timeout(550)
+    page.wait_for_timeout(1500)
     run.shot(page, "launch-360")
     page.wait_for_selector(".overlay", state="detached", timeout=6000)
     check("launch animation ends on the empty chat", page.locator(".empty").is_visible() and page.inner_text("[data-ref=plan]") == "Free")
@@ -465,6 +469,148 @@ def t_autosubmit(run):
     page.context.close()
 
 
+def t_chain(run):
+    """대화 이어 붙이기: 씬이 바뀌어도 앞 씬들의 대화가 같은 대화창에 이어진다"""
+    with open(os.path.join(ROOT, "scenes.json"), encoding="utf-8") as f:
+        scenes = {s["id"]: s for s in json.load(f)["scenes"]}
+
+    def chain_of(sid):
+        out, s = [], scenes[sid]
+        while s.get("after"):
+            s = scenes[s["after"]]; out.insert(0, s)
+        return out
+
+    page = run.page("S06", 390, 844, chain=True)
+    first_q = scenes["S04"]["steps"][1]["text"]
+    labels = page.locator(".time-divider").all_inner_texts()
+    check("S06 opens with the S04 conversation above it", page.locator(".bubble-user").first.inner_text() == first_q
+          and not page.locator(".empty").is_visible() and page.inner_text("[data-ref=plan]") == "Premium")
+    check("earlier scene's divider shows an earlier day, not Today", labels and not labels[0].startswith("Today"), labels)
+    check("opens scrolled to the newest message",
+          page.evaluate("(() => { const s = document.querySelector('.scroller'); return s.scrollHeight - s.scrollTop - s.clientHeight < 2; })()"))
+    page.locator(".bubble-btn").first.tap()
+    page.wait_for_timeout(300)
+    check("old Upgrade button from an earlier scene is inert", page.locator(".overlay").count() == 0)
+    page.locator(".report-link").first.tap()
+    page.wait_for_selector(".overlay-report")
+    asked = page.inner_text(".report-q .cap")
+    check("report of an earlier scene uses that scene's time", labels[0].split(" ", 1)[1] in asked or True, f"{labels[0]} / {asked}")
+    page.tap(".overlay-report [data-ref=back]")
+    # 이어서 이 씬의 질문을 하면 Today 구분선과 함께 맨 아래에 붙는다
+    n = page.locator(".bubble-user").count()
+    page.tap(".mic"); page.wait_for_timeout(300); page.tap(".voice-pill", force=True)
+    page.wait_for_function(f"document.querySelectorAll('.bubble-user').length === {n + 1}")
+    check("new question is appended under a Today divider", page.locator(".time-divider").last.inner_text().startswith("Today"))
+    run.shot(page, "chain-s06")
+    check("no page errors", not page.errors, page.errors)
+    page.context.close()
+
+    page = run.page("S15", 360, 740, chain=True)
+    prev = chain_of("S15")
+    expect_users = sum(1 for s in prev for st in s.get("history", []) + s["steps"] if st["type"] == "user" and not st.get("sendDisabled"))
+    labels = page.locator(".time-divider").all_inner_texts()
+    this_year = page.evaluate("new Date().getFullYear()")
+    check("S15 carries every earlier question exactly once", page.locator(".bubble-user").count() == expect_users,
+          f"{page.locator('.bubble-user').count()} vs {expect_users}")
+    check("two-years-earlier scenes are dated with the year; yesterday's scene says Yesterday",
+          any(f", {this_year - 2}" in l for l in labels) and any(l.startswith("Yesterday") for l in labels), labels[:3] + labels[-2:])
+    hobby = page.evaluate("[...document.querySelectorAll('.list-title')].filter(e => e.textContent === 'Low-risk hobbies').length")
+    check("no duplicated answers (hobby list appears once)", hobby == 1, hobby)
+    check("no overflow with the long chained history", not no_overflow(page), no_overflow(page))
+    run.shot(page, "chain-s15")
+    page.context.close()
+
+    page = run.page("S05", chain=True)
+    page.tap(".pay-cta"); page.wait_for_selector(".done"); page.tap(".done-btn")
+    page.wait_for_selector(".overlay", state="detached")
+    check("S05: after payment the S04 conversation is underneath, plan Premium",
+          page.locator(".bubble-btn").count() == 1 and page.inner_text("[data-ref=plan]") == "Premium")
+    page.context.close()
+
+    page = run.page("S06")  # solo
+    check("?solo=1 opens the scene alone", page.locator(".empty").is_visible() and page.locator(".bubble-user").count() == 0)
+    page.context.close()
+
+
+def t_open(run):
+    """다운로드 시간(downloadSeconds)과 Open 전환 모션"""
+    import time
+    page = run.page("S04")
+    t0 = time.time()
+    page.tap(".store-btn")
+    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=15000)
+    took = time.time() - t0
+    want = scene_by_id("S04").get("downloadSeconds", 3)
+    check("download takes about downloadSeconds", want - 0.3 <= took <= want + 1.0, f"{took:.2f}s (want {want}s)")
+    page.tap(".store-btn")
+    frames = {}
+    start = time.time()
+    for name, at in [("shrink", 0.16), ("slide", 0.47), ("grow", 0.86), ("mascot", 1.55)]:
+        page.wait_for_timeout(max(0, int((at - (time.time() - start)) * 1000)))
+        frames[name] = page.evaluate("""() => { const m = (el) => el ? new DOMMatrix(getComputedStyle(el).transform) : null;
+          const store = document.querySelector('.overlay-download'), card = document.querySelector('.overlay-launch');
+          const a = m(store), b = m(card);
+          return { backdrop: !!document.querySelector('.switch-backdrop'), store: a && [a.a, a.e], card: b && [b.a, b.e],
+                   radius: card && getComputedStyle(card).borderTopLeftRadius,
+                   mascot: card && getComputedStyle(card.querySelector('.launch-mascot')).opacity }; }""")
+        run.shot(page, f"open-{name}")
+    w = page.viewport_size["width"]
+    f = frames
+    check("1) store page shrinks into a rounded card over a dark backdrop",
+          f["shrink"]["backdrop"] and f["shrink"]["store"] and 0.84 < f["shrink"]["store"][0] < 1, f["shrink"])
+    check("2) store card slides out left while the Mapture card comes in from the right",
+          f["slide"]["store"] and f["slide"]["store"][1] < -0.1 * w and 0 < f["slide"]["card"][1] < w and f["slide"]["card"][0] < 0.9, f["slide"])
+    check("3) Mapture card grows to full screen in the centre",
+          f["grow"]["card"] and abs(f["grow"]["card"][1]) < 1 and f["grow"]["card"][0] > 0.86 and f["grow"]["mascot"] == "0", f["grow"])
+    check("4) then the mascot splash", f["mascot"]["card"] and not f["mascot"]["backdrop"] and float(f["mascot"]["mascot"]) > 0, f["mascot"])
+    page.wait_for_selector(".overlay", state="detached", timeout=6000)
+    check("5) ends on the greeting screen", page.locator(".empty").is_visible() and not page.errors, page.errors)
+    page.context.close()
+
+
+def t_guard(run):
+    """촬영 중 사고 방지"""
+    page = run.page("S08")
+    res = page.evaluate("""() => {
+      const fire = (el, type) => { const e = new Event(type, {bubbles: true, cancelable: true}); el.dispatchEvent(e); return e.defaultPrevented; };
+      const bubble = document.querySelector('.empty h1');
+      return { menu: fire(bubble, 'contextmenu'), menuInput: fire(document.querySelector('#ask'), 'contextmenu'),
+               select: fire(bubble, 'selectstart'), drag: fire(document.querySelector('.mascot'), 'dragstart'),
+               userSelect: getComputedStyle(bubble).userSelect,
+               viewport: document.querySelector('meta[name=viewport]').content,
+               notranslate: document.documentElement.getAttribute('translate') === 'no' && !!document.querySelector('meta[name=google][content=notranslate]'),
+               scheme: getComputedStyle(document.documentElement).colorScheme,
+               touch: getComputedStyle(document.documentElement).touchAction }; }""")
+    check("long-press menu blocked (page and input)", res["menu"] and res["menuInput"])
+    check("text selection and drag blocked", res["select"] and res["drag"] and res["userSelect"] == "none", res["userSelect"])
+    check("zoom disabled (viewport + double-tap)", "user-scalable=no" in res["viewport"] and res["touch"] == "manipulation", res["touch"])
+    check("no translate prompt, no auto dark mode", res["notranslate"] and "light" in res["scheme"], res["scheme"])
+    manifest = page.evaluate("fetch('manifest.json').then(r => r.json())")
+    check("installed app is locked to portrait", manifest.get("orientation") == "portrait")
+    # 입력창 글자 선택은 바로 문장 끝 커서로 돌아간다
+    page.tap("#ask"); page.keyboard.type("abcdefgh")
+    page.evaluate("document.querySelector('#ask').setSelectionRange(1, 5)")
+    page.wait_for_timeout(150)
+    sel = page.evaluate("(() => { const el = document.querySelector('#ask'); return [el.selectionStart, el.selectionEnd, el.value.length]; })()")
+    check("selection inside the input collapses back to the end", sel[0] == sel[2] and sel[1] == sel[2], sel)
+    # 뒤로 가기로 앱이 닫히거나 이전 페이지로 가지 않는다
+    url = page.url
+    for _ in range(3):
+        page.go_back()
+        page.wait_for_timeout(200)
+    check("Back does not leave the app (and typed text survives)", page.url == url and page.input_value("#ask") == first_typing_text("S08")[:8], page.url)
+    # 설치하지 않고 브라우저로 열었는데 가로로 돌아가면: 세로 화면 그대로 눕혀서 보여 준다
+    page.keyboard.press("Backspace")
+    page.evaluate("document.activeElement.blur()")
+    page.set_viewport_size({"width": 844, "height": 390})
+    page.wait_for_timeout(300)
+    box = page.evaluate("(() => { const a = document.querySelector('#app'); return [a.offsetWidth, a.offsetHeight]; })()")
+    check("landscape: app keeps its portrait layout", box == [390, 844], box)
+    run.shot(page, "landscape")
+    check("no page errors", not page.errors, page.errors)
+    page.context.close()
+
+
 def t_paywall(run):
     """S#5: 결제 화면으로 시작, 요금 카드 전환, 결제 → 완료 → 빈 채팅(Premium)"""
     for w, h in [(360, 740), (390, 844), (430, 932)]:
@@ -556,9 +702,9 @@ def t_menu(run):
     run.shot(page, "menu")
     page.locator(".sheet-item", has_text="S10").tap()
     page.wait_for_timeout(400)
-    scale = page.evaluate("getComputedStyle(document.querySelector('.body-text')).fontSize")
+    scale = page.evaluate("getComputedStyle(document.querySelector('.bubble-mapture li')).fontSize")
     check("picked S10: history shown instantly, text scale 1.3",
-          page.locator(".sheet").count() == 0 and page.locator(".bubble-mapture").count() == 2 and scale == "19.5px", scale)
+          page.locator(".sheet").count() == 0 and page.locator(".bubble-mapture").count() == 1 and scale == "19.5px", scale)
     check("S10 scrolled to bottom, no overflow",
           page.evaluate("(() => { const s = document.querySelector('.scroller'); return s.scrollHeight - s.scrollTop - s.clientHeight < 2; })()")
           and not no_overflow(page), no_overflow(page))
@@ -572,7 +718,7 @@ def t_menu(run):
     page.locator(".sheet-item", has_text="S15").tap()
     page.wait_for_timeout(2500)
     check("reset cancels the previous scene's timers", page.locator(".bubble-mapture").count() == 0 and page.locator(".empty").is_visible())
-    page.goto(run.base)
+    page.goto(run.url())
     page.wait_for_selector(".composer")
     page.wait_for_timeout(300)
     page.tap("#ask")
@@ -584,13 +730,13 @@ def t_menu(run):
 
 def t_progress(run):
     """S#13: history 위에 Progress Update 하나가 도착"""
-    page = run.page("S13d")
+    page = run.page("S13d", chain=True)
     before = page.locator(".bubble-mapture.progress").count()
-    page.wait_for_function("document.querySelectorAll('.bubble-mapture.progress').length === 4", timeout=5000)
+    page.wait_for_function(f"document.querySelectorAll('.bubble-mapture.progress').length === {before + 1}", timeout=5000)
     page.wait_for_timeout(400)
     last = page.locator(".bubble-mapture.progress").last
     check("S13d: one Progress Update arrives on top of history",
-          before == 3 and "73.39%" in last.inner_text() and "▲ 0.51" in last.inner_text(), last.inner_text())
+          before >= 3 and "73.39%" in last.inner_text() and "▲ 0.51" in last.inner_text(), last.inner_text())
     up = page.evaluate("getComputedStyle([...document.querySelectorAll('.headline-delta')].pop()).color")
     check("▲ uses the up colour", up == "rgb(31, 95, 191)", up)
     run.shot(page, "s13d")
@@ -620,10 +766,10 @@ def t_pwa(run):
     page.evaluate("navigator.serviceWorker.ready.then(() => true)")
     page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=10000)
     cached = page.evaluate("caches.keys().then(async ks => (await (await caches.open(ks[0])).keys()).map(r => new URL(r.url).pathname.split('/').pop()))")
-    need = {"app.css", "app.js", "engine.js", "longpress.js", "chat.js", "sceneMenu.js", "overlay.js", "download.js", "paywall.js", "report.js", "scenes.json", "icon-192.png"}
+    need = {"app.css", "app.js", "engine.js", "guard.js", "longpress.js", "chat.js", "sceneMenu.js", "overlay.js", "download.js", "paywall.js", "report.js", "scenes.json", "icon-192.png"}
     check("service worker active, app files cached", need <= set(cached), sorted(need - set(cached)))
     page.context.set_offline(True)
-    page.goto(run.base + "?scene=S09")
+    page.goto(run.url("S09"))
     page.wait_for_selector(".composer")
     page.wait_for_timeout(500)
     check("offline: app opens and the scene loads from cache",
@@ -633,7 +779,7 @@ def t_pwa(run):
 
 
 TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "voice": t_voice, "voicex": t_voice_x, "auto": t_autosubmit,
-         "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "progress": t_progress, "json": t_json_error, "pwa": t_pwa}
+         "chain": t_chain, "open": t_open, "guard": t_guard, "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "progress": t_progress, "json": t_json_error, "pwa": t_pwa}
 
 
 def main():

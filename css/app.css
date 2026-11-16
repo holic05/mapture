@@ -23,6 +23,10 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
+  color-scheme: light only;      /* 폰이 다크 모드여도 색을 뒤집지 않는다 */
+  touch-action: manipulation;    /* 두 번 탭 확대 금지 */
+  -webkit-user-select: none;
+  user-select: none;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font);
@@ -342,6 +346,7 @@ a { color: var(--accent); }
 .composer .attach { background: var(--bubble); }
 .composer .send { background: var(--accent); }
 .composer textarea {
+  touch-action: manipulation;
   flex: 1;
   min-width: 0;
   height: 44px;
@@ -652,7 +657,19 @@ a { color: var(--accent); }
 .store-shot span { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .store-shot b { font-size: clamp(20px, 6.6vw, 26px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
 
-/* 실행 애니메이션: 채팅 빈 화면의 마스코트 자리로 커지며 등장 */
+/* Open 전환: 스토어 카드가 작아지며 왼쪽으로 나가고, 맵쳐 카드가 오른쪽에서 들어와 전체 화면으로 커진다.
+   두 카드는 같은 시간표(1초)를 쓴다: 0~22% 작아짐 / 22~72% 가로 이동 / 72~100% 커짐 */
+.switch-backdrop { z-index: 25; background: #0B0D0C; animation: none; }
+.overlay-download.switch-out {
+  z-index: 26;
+  pointer-events: none;
+  animation: switch-out 1s cubic-bezier(.4, 0, .2, 1) both;
+}
+@keyframes switch-out {
+  0% { transform: translateX(0) scale(1); border-radius: 0; }
+  22% { transform: translateX(0) scale(.86); border-radius: 40px; }
+  72%, 100% { transform: translateX(-106%) scale(.86); border-radius: 40px; }
+}
 .overlay-launch {
   z-index: 30;
   align-items: center;
@@ -660,18 +677,27 @@ a { color: var(--accent); }
   animation: none;
   transition: opacity .26s ease;
 }
+.overlay-launch.switch-in { animation: switch-in 1s cubic-bezier(.4, 0, .2, 1) both; }
+@keyframes switch-in {
+  0%, 22% { transform: translateX(106%) scale(.86); border-radius: 40px; }
+  72% { transform: translateX(0) scale(.86); border-radius: 40px; }
+  100% { transform: translateX(0) scale(1); border-radius: 0; }
+}
 .overlay-launch.leaving { opacity: 0; }
-.launch-mascot { animation: launch-grow 1s cubic-bezier(.2, .9, .25, 1.15) both; }
+
+/* 마스코트 시작 화면: 가운데서 커지며 등장, 고리가 한 바퀴 돈다 */
+.launch-mascot { opacity: 0; }
 .launch-mascot .mascot { display: block; overflow: visible; }
+.show-mascot .launch-mascot { animation: launch-grow 1s cubic-bezier(.2, .9, .25, 1.15) both; }
 @keyframes launch-grow {
   0% { transform: scale(.12); opacity: 0; }
   25% { opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
-.launch-mascot .mascot-ring-back { transform-origin: 60px 64px; animation: launch-ring .95s cubic-bezier(.3, .6, .2, 1) both; }
+.show-mascot .mascot-ring-back { transform-origin: 60px 64px; animation: launch-ring .95s cubic-bezier(.3, .6, .2, 1) both; }
 @keyframes launch-ring { from { transform: rotate(-360deg); } to { transform: rotate(0deg); } }
-.launch-mascot .mascot-ring-front { animation: launch-late .25s ease-out .8s both; }
-.launch-mascot .mascot-sparkle { transform-origin: 101px 18px; animation: launch-pop .3s ease-out .8s both; }
+.show-mascot .mascot-ring-front { animation: launch-late .25s ease-out .8s both; }
+.show-mascot .mascot-sparkle { transform-origin: 101px 18px; animation: launch-pop .3s ease-out .8s both; }
 @keyframes launch-late { from { opacity: 0; } }
 @keyframes launch-pop { from { opacity: 0; transform: scale(0); } }
 
@@ -811,3 +837,23 @@ a { color: var(--accent); }
 .tl-event { font-size: 16px; line-height: 1.45; overflow-wrap: break-word; }
 .tl-prob { align-self: flex-start; font-size: 13px; font-weight: 600; color: var(--accent-dark); background: var(--accent-soft); border-radius: 12px; padding: 4px 10px; }
 .report-based { margin-top: auto; border-top: 1px solid var(--line); padding: 16px 0 28px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ===== 촬영 중 사고 방지 ===== */
+img, svg, a { -webkit-user-drag: none; user-select: none; -webkit-user-select: none; }
+/* 입력창 글자를 길게 눌러도 선택 영역(파란 손잡이)이 보이지 않게 */
+.composer textarea::selection { background: transparent; color: inherit; }
+/* 폰이 가로로 돌아가도(설치하지 않고 브라우저로 열었을 때) 화면을 세로로 유지 */
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html:not(.kb-open) #app {
+    width: 100vh;
+    max-width: none;
+    height: 100vw;
+    left: 50%;
+    right: auto;
+    top: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%) rotate(-90deg);
+  }
+  /* 반대 방향으로 눕힌 경우 (js/guard.js가 표시) */
+  html.land-flip:not(.kb-open) #app { transform: translate(-50%, -50%) rotate(90deg); }
+}

@@ -1,106 +1,106 @@
 {
-  "version": 1,
+  "version": 2,
   "scenes": [
     {
-      "id": "S03", "title": "S#3 Café — Jaeseong's phone", "start": "chat", "plan": "Premium", "profile": "J",
+      "id": "S03", "title": "S#3 Café — Jaeseong's phone", "start": "chat", "plan": "Premium", "profile": "J", "phoneTime": "3:30 PM",
       "history": [
         {"type": "divider", "time": "-3h"},
-        {"type": "user", "input": "typing", "text": "Will it rain this afternoon?", "note": "[TODO: 임시 내용]"},
-        {"type": "mapture", "body": "There is a 4.2% probability of rain in your area between noon and 6 p.m. You will not need an umbrella!", "note": "[TODO: 임시 내용]"},
+        {"type": "user", "input": "typing", "text": "Will it rain this afternoon?", "note": "[TODO: 작가 확인] 임시 대화 (이전 대화 예시)"},
+        {"type": "mapture", "body": "There is a 4.2% probability of rain in your area between noon and 6 p.m. You will not need an umbrella!", "note": "[TODO: 작가 확인] 임시 대화 (이전 대화 예시)"},
         {"type": "divider", "time": "-40m"},
-        {"type": "user", "input": "typing", "text": "How crowded is the café near the station right now?", "note": "[TODO: 임시 내용]"},
-        {"type": "mapture", "body": "There is an 87.3% probability that a window seat will be available if you arrive within the next 30 minutes!", "note": "[TODO: 임시 내용]"}
+        {"type": "user", "input": "typing", "text": "How crowded is the café near the station right now?", "note": "[TODO: 작가 확인] 임시 대화 (이전 대화 예시)"},
+        {"type": "mapture", "body": "There is an 87.3% probability that a window seat will be available if you arrive within the next 30 minutes!", "note": "[TODO: 작가 확인] 임시 대화 (이전 대화 예시)"}
       ],
       "steps": [
         {"type": "divider", "time": "now"},
-        {"type": "user", "input": "typing", "text": "[TODO: Jaeseong's question, e.g. \"When will Jasmine arrive?\"]"},
+        {"type": "user", "input": "typing", "text": "When will Jasmine arrive?", "note": "[TODO: 작가 확인] 질문 문장"},
         {"type": "mapture", "loading": {"seconds": 1, "text": "One moment, please…"}, "body": "Jasmine — 98.6% probability of arriving in 2 minutes. Estimated arrival: 3:32 p.m."}
       ]
     },
     {
-      "id": "S04", "title": "S#4 Café — first use", "start": "download", "plan": "Free", "profile": "E",
+      "id": "S04", "title": "S#4 Café — first use", "start": "download", "plan": "Free", "profile": "E", "phoneTime": "9:22 PM", "downloadSeconds": 3,
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
-        {"type": "user", "input": "voice", "text": "Is anyone going to contact me tonight?"},
+        {"type": "user", "input": "voice", "text": "Is anyone going to contact me tonight?", "autoSubmit": 5.0},
         {"type": "mapture", "loading": {"seconds": 2, "text": "One moment, please…"}, "body": "Based on an analysis of your behavioral patterns and those of the people in your contacts, there is approximately a 99.1% probability that Lee Chaeyeon will call you in 17 minutes, at 9:39 p.m., to invite you out for drinks!", "report": {"question": "Is anyone going to contact me tonight?", "askedAt": "now", "items": [{"time": "+17m", "event": "Phone call from Lee Chaeyeon inviting user for drinks", "prob": "99.1%"}, {"time": "+18m", "event": "User declines invitation", "prob": "98.2%"}], "basedOn": ["Behavioral patterns", "Contacts", "Call history", "Location"]}},
         {"type": "divider", "time": "now"},
-        {"type": "user", "input": "voice", "text": "What's going to happen in one minute?"},
-        {"type": "mapture", "body": "In one minute, there is a 99.98% probability that a delivery rider bringing fried chicken to the apartment upstairs will pass by your front door!", "note": "[TODO: 카페로 장소 변경에 맞춰 수정 예정]"},
-        {"type": "user", "input": "voice", "text": "Mapture, what will I see if I open my window right now?"},
-        {"type": "mapture", "body": "If you open your window right now, there is a 99.97% probability that you'll make eye contact with a neighbor illegally dumping trash!", "note": "[TODO: 카페로 장소 변경에 맞춰 수정 예정]"},
-        {"type": "user", "input": "voice", "text": "…What's the probability that, ten years from now, I'll be living the life I want?"},
+        {"type": "user", "input": "voice", "text": "What's going to happen in one minute?", "autoSubmit": 5.0},
+        {"type": "mapture", "body": "In one minute, there is a 99.98% probability that a delivery rider picking up fried chicken for the office upstairs will walk right past your table!", "note": "[TODO: 작가 확인] 카페 버전 초안. 대본 원문: In one minute, there is a 99.98% probability that a delivery rider bringing fried chicken to the apartment upstairs will pass by your front door!"},
+        {"type": "user", "input": "voice", "text": "Mapture, what will I see if I look out the window right now?", "autoSubmit": 8.0, "note": "[TODO: 작가 확인] 카페 버전 초안. 대본 원문: Mapture, what will I see if I open my window right now?"},
+        {"type": "mapture", "body": "If you look out the window right now, there is a 99.97% probability that you'll make eye contact with a passerby illegally dumping trash!", "note": "[TODO: 작가 확인] 카페 버전 초안. 대본 원문: If you open your window right now, there is a 99.97% probability that you'll make eye contact with a neighbor illegally dumping trash!"},
+        {"type": "user", "input": "voice", "text": "…What's the probability that, ten years from now, I'll be living the life I want?", "autoSubmit": 9.0},
         {"type": "mapture", "loading": {"seconds": 6, "text": "Performing long-term analysis…", "progressBar": true}, "headline": {"label": "Probability · 10-year outlook", "value": "34.17%", "size": "huge"}, "body": "According to my analysis, the probability that you'll be living the life you want in ten years is 34.17%!", "disclaimer": "Estimate based on your behavioral patterns, contacts, academic records and macroeconomic data. Predictions are probabilistic and do not guarantee outcomes.", "typingSpeed": 12},
-        {"type": "user", "input": "voice", "text": "Mapture, how do I avoid that—?!"},
+        {"type": "user", "input": "voice", "text": "Mapture, how do I avoid that—?!", "autoSubmit": 4.5},
         {"type": "mapture", "body": "Oh! I'm sorry, but it looks like you've used up all your predictions on the Mapture Free plan. Upgrade to Premium now to receive 200 prediction tokens per day and enhanced long-term simulation features!", "button": {"label": "Upgrade to Premium", "action": "paywall"}}
       ]
     },
     {
-      "id": "S04b", "title": "S#4 Café — retake from 10-year question", "start": "chat", "plan": "Free", "profile": "E",
+      "id": "S04b", "title": "S#4 Café — retake from 10-year question", "start": "chat", "plan": "Free", "profile": "E", "phoneTime": "9:47 PM",
       "history": [
         {"type": "divider", "time": "-25m"},
         {"type": "user", "input": "voice", "text": "Is anyone going to contact me tonight?"},
         {"type": "mapture", "body": "Based on an analysis of your behavioral patterns and those of the people in your contacts, there is approximately a 99.1% probability that Lee Chaeyeon will call you in 17 minutes, at 9:39 p.m., to invite you out for drinks!", "report": {"question": "Is anyone going to contact me tonight?", "askedAt": "-25m", "items": [{"time": "-8m", "event": "Phone call from Lee Chaeyeon inviting user for drinks", "prob": "99.1%"}, {"time": "-7m", "event": "User declines invitation", "prob": "98.2%"}], "basedOn": ["Behavioral patterns", "Contacts", "Call history", "Location"]}},
         {"type": "divider", "time": "-6m"},
         {"type": "user", "input": "voice", "text": "What's going to happen in one minute?"},
-        {"type": "mapture", "body": "In one minute, there is a 99.98% probability that a delivery rider bringing fried chicken to the apartment upstairs will pass by your front door!", "note": "[TODO: 카페로 장소 변경에 맞춰 수정 예정]"},
-        {"type": "user", "input": "voice", "text": "Mapture, what will I see if I open my window right now?"},
-        {"type": "mapture", "body": "If you open your window right now, there is a 99.97% probability that you'll make eye contact with a neighbor illegally dumping trash!", "note": "[TODO: 카페로 장소 변경에 맞춰 수정 예정]"},
-        {"type": "user", "input": "voice", "text": "[TODO: additional question 1]"},
-        {"type": "mapture", "body": "[TODO: additional answer 1]"},
-        {"type": "user", "input": "voice", "text": "[TODO: additional question 2]"},
-        {"type": "mapture", "body": "[TODO: additional answer 2]"}
+        {"type": "mapture", "body": "In one minute, there is a 99.98% probability that a delivery rider picking up fried chicken for the office upstairs will walk right past your table!", "note": "[TODO: 작가 확인] 카페 버전 초안. 대본 원문: In one minute, there is a 99.98% probability that a delivery rider bringing fried chicken to the apartment upstairs will pass by your front door!"},
+        {"type": "user", "input": "voice", "text": "Mapture, what will I see if I look out the window right now?", "note": "[TODO: 작가 확인] 카페 버전 초안. 대본 원문: Mapture, what will I see if I open my window right now?"},
+        {"type": "mapture", "body": "If you look out the window right now, there is a 99.97% probability that you'll make eye contact with a passerby illegally dumping trash!", "note": "[TODO: 작가 확인] 카페 버전 초안. 대본 원문: If you open your window right now, there is a 99.97% probability that you'll make eye contact with a neighbor illegally dumping trash!"},
+        {"type": "user", "input": "voice", "text": "Mapture, will it rain on my way home?", "note": "[TODO: 작가 확인] 겹쳐 쌓이는 질문 초안"},
+        {"type": "mapture", "body": "Based on an analysis of weather data and your usual route, there is a 3.2% probability that it will rain before you get home at 10:41 p.m.!", "note": "[TODO: 작가 확인] 겹쳐 쌓이는 질문 초안"},
+        {"type": "user", "input": "voice", "text": "Mapture, am I going to pass tomorrow's quiz?", "note": "[TODO: 작가 확인] 겹쳐 쌓이는 질문 초안"},
+        {"type": "mapture", "body": "Based on an analysis of your study records and your professor's past quizzes, there is an 88.4% probability that you will pass tomorrow's quiz!", "note": "[TODO: 작가 확인] 겹쳐 쌓이는 질문 초안"}
       ],
       "steps": [
-        {"type": "user", "input": "voice", "text": "…What's the probability that, ten years from now, I'll be living the life I want?"},
+        {"type": "user", "input": "voice", "text": "…What's the probability that, ten years from now, I'll be living the life I want?", "autoSubmit": 9.0},
         {"type": "mapture", "loading": {"seconds": 6, "text": "Performing long-term analysis…", "progressBar": true}, "headline": {"label": "Probability · 10-year outlook", "value": "34.17%", "size": "huge"}, "body": "According to my analysis, the probability that you'll be living the life you want in ten years is 34.17%!", "disclaimer": "Estimate based on your behavioral patterns, contacts, academic records and macroeconomic data. Predictions are probabilistic and do not guarantee outcomes.", "typingSpeed": 12},
-        {"type": "user", "input": "voice", "text": "Mapture, how do I avoid that—?!"},
+        {"type": "user", "input": "voice", "text": "Mapture, how do I avoid that—?!", "autoSubmit": 4.5},
         {"type": "mapture", "body": "Oh! I'm sorry, but it looks like you've used up all your predictions on the Mapture Free plan. Upgrade to Premium now to receive 200 prediction tokens per day and enhanced long-term simulation features!", "button": {"label": "Upgrade to Premium", "action": "paywall"}}
       ]
     },
     {
-      "id": "S05", "title": "S#5 Classroom — payment", "start": "paywall", "plan": "Free", "profile": "E",
+      "id": "S05", "title": "S#5 Classroom — payment", "start": "paywall", "plan": "Free", "profile": "E", "after": "S04", "gap": "14h",
       "history": [],
       "steps": []
     },
     {
-      "id": "S06", "title": "S#6 Montage — voice Q&A", "start": "chat", "plan": "Premium", "profile": "E",
+      "id": "S06", "title": "S#6 Montage — voice Q&A", "start": "chat", "plan": "Premium", "profile": "E", "after": "S05", "gap": "1d",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
-        {"type": "user", "input": "voice", "text": "Mapture, what should I start studying now if I want to succeed?"},
-        {"type": "mapture", "headline": {"label": "Probability of Success", "value": "[TODO: 시작값]", "size": "normal"}, "body": "Based on an analysis of international affairs and your personal traits, starting to learn Spanish now could increase your probability of success ten years from now by 1.7 percentage points!"},
-        {"type": "user", "input": "voice", "text": "Mapture, what should I choose as my presentation topic in my Human Resource Management class if I want to succeed?"},
+        {"type": "user", "input": "voice", "text": "Mapture, what should I start studying now if I want to succeed?", "autoSubmit": 7.5},
+        {"type": "mapture", "headline": {"label": "Probability of Success", "value": "35.87%", "size": "normal", "delta": "1.70", "up": true}, "body": "Based on an analysis of international affairs and your personal traits, starting to learn Spanish now could increase your probability of success ten years from now by 1.7 percentage points!", "note": "[TODO: 작가 확인] 시작값 초안: 34.17% + 1.7%p = 35.87%"},
+        {"type": "user", "input": "voice", "text": "Mapture, what should I choose as my presentation topic in my Human Resource Management class if I want to succeed?", "autoSubmit": 11.5},
         {"type": "mapture", "body": "Based on an analysis of your professor's interests and your personal traits, giving a presentation on strategic HRM would give you a 62.2% probability of making an impression on your professor and could increase your probability of success ten years from now by 0.41 percentage points!"},
         {"type": "mapture", "headline": {"label": "Progress Update", "value": "41.72%", "up": true}},
-        {"type": "user", "input": "voice", "text": "Mapture, are there any events I can attend right now that would help me succeed?"},
+        {"type": "user", "input": "voice", "text": "Mapture, are there any events I can attend right now that would help me succeed?", "autoSubmit": 9.0},
         {"type": "mapture", "body": "Based on an analysis of the job market and your personal traits, attending the HR department's recruitment information session at Sosun Group could increase your probability of success ten years from now by 0.03 percentage points!"},
         {"type": "mapture", "headline": {"label": "Progress Update", "value": "53.19%", "up": true}},
-        {"type": "user", "input": "voice", "text": "Mapture, what certification should I get if I want to succeed?"},
+        {"type": "user", "input": "voice", "text": "Mapture, what certification should I get if I want to succeed?", "autoSubmit": 7.0},
         {"type": "mapture", "body": "Based on an analysis of industry trends and your personal traits, earning a certification as an AI Labor Management Specialist could increase your probability of success ten years from now by 2.1 percentage points!"},
         {"type": "mapture", "headline": {"label": "Progress Update", "value": "63.03%", "up": true}}
       ]
     },
     {
-      "id": "S07", "title": "S#7 Daehangno — night", "start": "chat", "plan": "Premium", "profile": "E",
+      "id": "S07", "title": "S#7 Daehangno — night", "start": "chat", "plan": "Premium", "profile": "E", "after": "S06", "gap": "3d",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
-        {"type": "user", "input": "voice", "text": "Mapture, what should I have for dinner tonight?"},
+        {"type": "user", "input": "voice", "text": "Mapture, what should I have for dinner tonight?", "autoSubmit": 5.5},
         {"type": "mapture", "body": "Based on an analysis of your dining preferences and those of your friends, there's a 92.6% probability that you'll have a satisfying meal if you eat naengmyeon at Hamheung-Myeonok, near Exit 2 of Hyehwa Station!"}
       ]
     },
     {
-      "id": "S08", "title": "S#8 Restaurant — concert", "start": "chat", "plan": "Premium", "profile": "E",
+      "id": "S08", "title": "S#8 Restaurant — concert", "start": "chat", "plan": "Premium", "profile": "E", "after": "S07", "gap": "2d",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
         {"type": "user", "input": "typing", "text": "Mapture, should I go to the concert this Sunday?"},
-        {"type": "mapture", "headline": {"label": "Probability of Success", "value": "71.13%", "delta": "0.08", "up": false, "size": "normal"}, "body": "Based on the goals you've set, I would not recommend attending the concert this Sunday. Attending the concert this Sunday could decrease your long-term probability of success by 0.08%! Instead, I recommend the following activities.", "list": [{"title": "Recommended instead", "items": ["APSI Employment Fair", "[TODO]", "[TODO]"]}], "report": {"question": "Mapture, should I go to the concert this Sunday?", "askedAt": "now", "items": [{"time": "[TODO]", "event": "[TODO: timeline event]", "prob": "[TODO]"}], "basedOn": ["Goals", "Calendar", "Behavioral patterns"], "note": "[TODO: 리포트 내용]"}}
+        {"type": "mapture", "headline": {"label": "Probability of Success", "value": "71.13%", "delta": "0.08", "up": false, "size": "normal"}, "body": "Based on the goals you've set, I would not recommend attending the concert this Sunday. Attending the concert this Sunday could decrease your long-term probability of success by 0.08%! Instead, I recommend the following activities.", "list": [{"title": "Recommended instead", "items": ["APSI Employment Fair", "TOEIC Speaking mock test", "Résumé clinic at the Career Development Center"]}], "report": {"question": "Mapture, should I go to the concert this Sunday?", "askedAt": "now", "items": [{"time": "Sun 6:00 PM", "event": "Concert attendance: 3 hours 40 minutes with no measurable career benefit", "prob": "97.4%"}, {"time": "Sun 11:30 PM", "event": "Late return home, sleep reduced by 1 hour 50 minutes", "prob": "84.9%"}, {"time": "Mon 9:00 AM", "event": "Reduced concentration in Human Resource Management class", "prob": "61.8%"}], "basedOn": ["Goals", "Calendar", "Sleep records", "Behavioral patterns"]}, "note": "[TODO: 작가 확인] 대체 활동 2·3번과 리포트 내용 초안"}
       ]
     },
     {
-      "id": "S09", "title": "S#9 Study room", "start": "chat", "plan": "Premium", "profile": "E",
+      "id": "S09", "title": "S#9 Study room", "start": "chat", "plan": "Premium", "profile": "E", "after": "S08", "gap": "1d",
       "history": [
         {"type": "divider", "time": "-2h"},
         {"type": "mapture", "headline": {"label": "Progress Update", "value": "71.23%"}}
@@ -110,23 +110,20 @@
         {"type": "user", "input": "typing", "text": "What should I do when I can't concentrate?"},
         {"type": "mapture", "body": "Based on the goals you've set, taking a break right now is generally not recommended. Instead of taking an extended break, I suggest getting a cup of coffee at a nearby café or stepping out for a cigarette!"},
         {"type": "user", "input": "typing", "text": "Recommend a hobby for me."},
-        {"type": "mapture", "body": "As mentioned earlier, based on your long-term goals, pursuing hobbies at this stage of your life is generally not recommended. However, if you still wish to start a new hobby, I can suggest a few options with a low risk of failure!", "list": [{"title": "Low-risk hobbies", "items": ["Gymnastics", "Listening to short pieces of music", "Growing succulents", "[TODO]", "[TODO]", "Reading — ⚠ may decrease your probability of success from 71.23% to 71.22%"]}, {"title": "Reading — pros", "items": ["Improved comprehension", "Broader cultural knowledge"]}, {"title": "Reading — cons", "items": ["Time-consuming"]}]}
+        {"type": "mapture", "body": "As mentioned earlier, based on your long-term goals, pursuing hobbies at this stage of your life is generally not recommended. However, if you still wish to start a new hobby, I can suggest a few options with a low risk of failure!", "list": [{"title": "Low-risk hobbies", "items": ["Gymnastics", "Listening to short pieces of music", "Growing succulents", "Solving sudoku puzzles", "Walking for under 20 minutes", "Reading — ⚠ may decrease your probability of success from 71.23% to 71.22%"]}, {"title": "Reading — pros", "items": ["Improved comprehension", "Broader cultural knowledge"]}, {"title": "Reading — cons", "items": ["Time-consuming"]}], "note": "[TODO: 작가 확인] 취미 목록 4·5번 초안"}
       ]
     },
     {
-      "id": "S10", "title": "S#10 Library — book list", "start": "chat", "plan": "Premium", "profile": "E", "textScale": 1.3,
+      "id": "S10", "title": "S#10 Library — book list", "start": "chat", "plan": "Premium", "profile": "E", "textScale": 1.3, "after": "S09", "gap": "1d",
       "history": [
-        {"type": "divider", "time": "-20m"},
-        {"type": "user", "input": "typing", "text": "Recommend a hobby for me."},
-        {"type": "mapture", "body": "As mentioned earlier, based on your long-term goals, pursuing hobbies at this stage of your life is generally not recommended. However, if you still wish to start a new hobby, I can suggest a few options with a low risk of failure!", "list": [{"title": "Low-risk hobbies", "items": ["Gymnastics", "Listening to short pieces of music", "Growing succulents", "[TODO]", "[TODO]", "Reading — ⚠ may decrease your probability of success from 71.23% to 71.22%"]}, {"title": "Reading — pros", "items": ["Improved comprehension", "Broader cultural knowledge"]}, {"title": "Reading — cons", "items": ["Time-consuming"]}]},
         {"type": "divider", "time": "-2m"},
         {"type": "user", "input": "typing", "text": "Recommend books for me."},
-        {"type": "mapture", "list": [{"title": "Recommended", "items": ["The Old Man and the Sea", "Chronicle of a Blood Merchant", "What Men Live By", "[TODO]", "[TODO]", "[TODO]"]}, {"title": "Not Recommended", "items": ["Notes from Underground", "[TODO]", "[TODO]", "[TODO]"]}], "note": "[TODO: Recommended 3~5권, Not Recommended 3~4권 추가]"}
+        {"type": "mapture", "list": [{"title": "Recommended", "items": ["The Old Man and the Sea", "Chronicle of a Blood Merchant", "What Men Live By", "The Little Prince", "Jonathan Livingston Seagull", "Who Moved My Cheese?"]}, {"title": "Not Recommended", "items": ["Notes from Underground", "The Stranger", "No Longer Human", "Bartleby, the Scrivener"]}], "note": "[TODO: 작가 확인] 책 목록 초안 (Recommended 4~6번, Not Recommended 2~4번)"}
       ],
       "steps": []
     },
     {
-      "id": "S11", "title": "S#11 Emily's room — course comparison", "start": "chat", "plan": "Premium", "profile": "E",
+      "id": "S11", "title": "S#11 Emily's room — course comparison", "start": "chat", "plan": "Premium", "profile": "E", "after": "S10", "gap": "5d",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -135,96 +132,56 @@
       ]
     },
     {
-      "id": "S13a", "title": "S#13 Montage — cut a (69.53%)", "start": "chat", "plan": "Premium", "profile": "E",
-      "history": [
-        {"type": "divider", "time": "-1d"},
-        {"type": "user", "input": "typing", "text": "Compare my probability of success if I take Introduction to New Media instead of AI Workflow Development this semester."},
-        {"type": "mapture", "body": "Based on an analysis of your records, your probability of success would be 70.98% if you take AI Workflow Development this semester, and 70.97% if you take Introduction to New Media!"}
-      ],
+      "id": "S13a", "title": "S#13 Montage — cut a (69.53%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S11", "gap": "1d",
+      "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
         {"type": "mapture", "headline": {"label": "Progress Update", "value": "69.53%", "delta": "1.45", "up": false}, "delay": 1.5}
       ]
     },
     {
-      "id": "S13b", "title": "S#13 Montage — cut b (73.22%)", "start": "chat", "plan": "Premium", "profile": "E",
-      "history": [
-        {"type": "divider", "time": "-2d"},
-        {"type": "user", "input": "typing", "text": "Compare my probability of success if I take Introduction to New Media instead of AI Workflow Development this semester."},
-        {"type": "mapture", "body": "Based on an analysis of your records, your probability of success would be 70.98% if you take AI Workflow Development this semester, and 70.97% if you take Introduction to New Media!"},
-        {"type": "divider", "time": "-1d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "69.53%", "delta": "1.45", "up": false}}
-      ],
+      "id": "S13b", "title": "S#13 Montage — cut b (73.22%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13a", "gap": "1d",
+      "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
         {"type": "mapture", "headline": {"label": "Progress Update", "value": "73.22%", "delta": "3.69", "up": true}, "delay": 1.5}
       ]
     },
     {
-      "id": "S13c", "title": "S#13 Montage — cut c (72.88%)", "start": "chat", "plan": "Premium", "profile": "E",
-      "history": [
-        {"type": "divider", "time": "-3d"},
-        {"type": "user", "input": "typing", "text": "Compare my probability of success if I take Introduction to New Media instead of AI Workflow Development this semester."},
-        {"type": "mapture", "body": "Based on an analysis of your records, your probability of success would be 70.98% if you take AI Workflow Development this semester, and 70.97% if you take Introduction to New Media!"},
-        {"type": "divider", "time": "-2d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "69.53%", "delta": "1.45", "up": false}},
-        {"type": "divider", "time": "-1d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "73.22%", "delta": "3.69", "up": true}}
-      ],
+      "id": "S13c", "title": "S#13 Montage — cut c (72.88%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13b", "gap": "1d",
+      "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
         {"type": "mapture", "headline": {"label": "Progress Update", "value": "72.88%", "delta": "0.34", "up": false}, "delay": 1.5}
       ]
     },
     {
-      "id": "S13d", "title": "S#13 Montage — cut d (73.39%)", "start": "chat", "plan": "Premium", "profile": "E",
-      "history": [
-        {"type": "divider", "time": "-4d"},
-        {"type": "user", "input": "typing", "text": "Compare my probability of success if I take Introduction to New Media instead of AI Workflow Development this semester."},
-        {"type": "mapture", "body": "Based on an analysis of your records, your probability of success would be 70.98% if you take AI Workflow Development this semester, and 70.97% if you take Introduction to New Media!"},
-        {"type": "divider", "time": "-3d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "69.53%", "delta": "1.45", "up": false}},
-        {"type": "divider", "time": "-2d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "73.22%", "delta": "3.69", "up": true}},
-        {"type": "divider", "time": "-1d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "72.88%", "delta": "0.34", "up": false}}
-      ],
+      "id": "S13d", "title": "S#13 Montage — cut d (73.39%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13c", "gap": "1d",
+      "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
         {"type": "mapture", "headline": {"label": "Progress Update", "value": "73.39%", "delta": "0.51", "up": true}, "delay": 1.5}
       ]
     },
     {
-      "id": "S13e", "title": "S#13 Montage — cut e (74.11%)", "start": "chat", "plan": "Premium", "profile": "E",
-      "history": [
-        {"type": "divider", "time": "-5d"},
-        {"type": "user", "input": "typing", "text": "Compare my probability of success if I take Introduction to New Media instead of AI Workflow Development this semester."},
-        {"type": "mapture", "body": "Based on an analysis of your records, your probability of success would be 70.98% if you take AI Workflow Development this semester, and 70.97% if you take Introduction to New Media!"},
-        {"type": "divider", "time": "-4d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "69.53%", "delta": "1.45", "up": false}},
-        {"type": "divider", "time": "-3d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "73.22%", "delta": "3.69", "up": true}},
-        {"type": "divider", "time": "-2d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "72.88%", "delta": "0.34", "up": false}},
-        {"type": "divider", "time": "-1d"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "73.39%", "delta": "0.51", "up": true}}
-      ],
-      "steps": [
-        {"type": "divider", "time": "now"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "74.11%", "delta": "0.72", "up": true}, "delay": 1.5, "note": "[TODO: 대본은 ▼, 숫자 확인] 지금은 숫자에 맞춰 ▲ 0.72로 임시 표시"}
-      ]
-    },
-    {
-      "id": "S14", "title": "S#14 Café — two years later", "start": "chat", "plan": "Premium", "profile": "E",
+      "id": "S13e", "title": "S#13 Montage — cut e (74.11%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13d", "gap": "1d",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
-        {"type": "user", "input": "typing", "text": "[TODO: e.g. \"What's my probability of success if I join Oracle Group?\"]"},
-        {"type": "mapture", "headline": {"label": "If you join Oracle Group", "value": "87%", "size": "huge"}, "body": "[TODO 한 문장]"}
+        {"type": "mapture", "headline": {"label": "Progress Update", "value": "74.11%", "delta": "0.72", "up": true}, "delay": 1.5, "note": "[TODO: 작가 확인] 대본은 ▼인데 숫자는 73.39 → 74.11로 오름. 지금은 ▲ 0.72로 표시"}
       ]
     },
     {
-      "id": "S15", "title": "S#15 Campus bench — Send does not respond", "start": "chat", "plan": "Premium", "profile": "E",
+      "id": "S14", "title": "S#14 Café — two years later", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13e", "gap": "2y",
+      "history": [],
+      "steps": [
+        {"type": "divider", "time": "now"},
+        {"type": "user", "input": "typing", "text": "What's my probability of success if I join Oracle Group?", "note": "[TODO: 작가 확인] 질문 문장"},
+        {"type": "mapture", "headline": {"label": "If you join Oracle Group", "value": "87%", "size": "huge"}, "body": "Based on an analysis of your records, joining Oracle Group would raise your probability of success ten years from now to 87%!", "note": "[TODO: 작가 확인] 답변 문장"}
+      ]
+    },
+    {
+      "id": "S15", "title": "S#15 Campus bench — Send does not respond", "start": "chat", "plan": "Premium", "profile": "E", "after": "S14", "gap": "1d",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},

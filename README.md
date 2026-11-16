@@ -13,11 +13,12 @@ js/app.js             진입점: scenes.json 로딩, 씬 선택, 키보드 대�
 js/engine.js          씬 엔진 (단계 진행, 로딩, 타이머)
 js/time.js            시각 값 처리 ("now", "-5m", "+17m")
 js/fatal.js           화면 전체 오류 표시
+js/guard.js           촬영 중 사고 방지 (확대·길게 누르기 메뉴·글자 선택·뒤로 가기)
 js/mascot.js          마스코트 SVG
 js/longpress.js       길게 누르기 (숨은 씬 메뉴용)
 js/views/chat.js      채팅 화면 (말풍선, 타이핑 출력, 고스트 타이핑, 음성 모드)
 js/views/overlay.js   채팅 위를 덮는 전체 화면의 공통 틀
-js/views/download.js  다운로드 페이지 + 실행 애니메이션
+js/views/download.js  다운로드 페이지 + Open 전환 모션 + 마스코트 시작 화면
 js/views/paywall.js   결제 화면 + 결제 완료
 js/views/report.js    Detailed Analysis Report
 js/views/sceneMenu.js 숨은 씬 메뉴
@@ -27,6 +28,10 @@ sw.js                 서비스 워커 (오프라인 캐시)
 icons/                앱 아이콘 (192, 512, svg)
 tools/make-icons.py   아이콘 재생성 스크립트 (python3 tools/make-icons.py)
 tools/check.py        Playwright 자동 확인 스크립트 (아래 8장)
+tools/cue-sheet.py    scenes.json → docs/cue-sheet.md (촬영 큐시트)
+tools/format-scenes.py scenes.json을 "한 단계 = 한 줄"로 다시 정렬
+docs/cue-sheet.md     씬별 촬영 큐시트 (자동 생성)
+docs/content-drafts.md 작가 확인이 필요한 초안 목록
 ```
 
 > `readme/`는 기획 참고 자료라서 `.gitignore`로 배포에서 빠집니다.
@@ -58,7 +63,7 @@ python3 -m http.server 8000
 4. 확인할 것
    - DevTools → **Application** 탭 → **Manifest**: 이름·아이콘이 보이고 오류가 없는지
    - **Application → Service workers**: `sw.js`가 *activated and is running*인지
-   - **Application → Cache storage**: `mapture-v4`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
+   - **Application → Cache storage**: `mapture-v5`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
    - **Network** 탭에서 *Offline* 체크 후 새로고침 → 그래도 열리는지
 
 > 개발 중에는 **Application → Service workers → "Update on reload"**를 체크해 두면
@@ -102,7 +107,7 @@ python3 -m http.server 8000
 | 고친 것 | 할 일 |
 |---|---|
 | `scenes.json`만 | 그냥 push. 앱을 다시 열면 반영됩니다 (scenes.json은 항상 네트워크 먼저 받아옴). |
-| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v4'` → `'v5'`) push. |
+| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v5'` → `'v6'`) push. |
 
 `CACHE_VERSION`을 올린 뒤 폰에서:
 
@@ -133,10 +138,17 @@ python3 -m http.server 8000
   음성 모드는 다음 질문을 위해 계속 켜져 있고, X를 누르면 일반 입력창으로 돌아갑니다.
   `scenes.json`에서 그 질문에 `autoSubmit`(초)을 적어 두면 탭하지 않아도 그 시간 뒤에 저절로 올라갑니다.
 - **답변 출력 중** 말풍선을 탭하면 남은 글자가 즉시 전부 표시됩니다.
-- **S#4:** 스토어 화면 → `Download`(약 2초) → `Open` → 실행 애니메이션 → 채팅. 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
+- **S#4:** 스토어 화면 → `Download`(3초, `downloadSeconds`로 조절) → `Open` → 스토어 카드가 왼쪽으로 밀려 나가고 맵쳐 카드가 들어와 커짐 → 마스코트 → 인사 화면. 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
 - **결제:** 요금 카드를 탭해 고르고 `Subscribe for …` → 완료 화면 → `Start predicting`. 이후 상단 플랜이 `Premium`으로 바뀝니다.
 - **리포트:** 답변 아래 `Detailed Analysis Report ›`를 탭. 왼쪽 위 뒤로 가기로 같은 대화로 돌아옵니다.
-- 개발용: 주소 뒤에 `?scene=S08`을 붙이면 그 씬으로 바로 시작합니다.
+- **이어지는 대화:** 씬을 고르면 앞 씬들의 대화가 위에 이어 붙은 채로 열립니다 (같은 대화창처럼). 날짜가 다른 씬은 시간 구분선으로 구분됩니다.
+- 씬별 동작 순서와 맞출 폰 시각은 **`docs/cue-sheet.md`** 에 있습니다.
+- 개발용: 주소 뒤에 `?scene=S08`을 붙이면 그 씬으로 바로 시작합니다. `&solo=1`을 더하면 앞 씬 대화 없이 그 씬만 엽니다.
+
+### 촬영 중 사고 방지로 막아 둔 것
+길게 눌러 뜨는 복사·붙여넣기 메뉴, 글자 선택, 두 손가락·두 번 탭 확대, 가로 회전, 당겨서 새로고침,
+Android 뒤로 가기로 앱이 닫히는 것, 번역 제안, 자동 다크 모드, 화면 꺼짐.
+알림·전화처럼 앱 밖에서 오는 것은 막을 수 없으니 **방해 금지 모드**를 켜세요.
 
 ---
 
@@ -145,7 +157,16 @@ python3 -m http.server 8000
 한 단계가 한 줄입니다. 고쳐서 push하면 앱을 다시 열 때 반영됩니다 (`CACHE_VERSION` 올릴 필요 없음).
 문법이 틀리면 앱 화면 전체에 주황색 오류와 줄 번호가 뜹니다. JSON에는 주석을 쓸 수 없습니다.
 
-씬: `id`, `title`(씬 메뉴에 표시), `start`(`chat` / `download` / `paywall`: 첫 화면), `plan`, `profile`, `textScale`, `history`(즉시 표시), `steps`(순서대로 재생)
+씬 항목:
+
+- `id`, `title`(씬 메뉴에 표시), `start`(`chat` / `download` / `paywall`: 첫 화면), `plan`, `profile`, `textScale`
+- `after`: 앞 씬의 id. 그 씬(과 그 앞 씬들)의 대화가 이 씬 위에 이어 붙습니다. 없으면 이 씬만 열립니다.
+- `gap`: 앞 씬으로부터 지난 시간 (`"14h"`, `"2d"`, `"1w"`, `"2y"`). 앞 씬 대화의 시간 구분선이 그만큼 과거로 표시됩니다
+  (`Yesterday 9:22 PM` → `Mon 9:22 PM` → `Nov 3 9:22 PM` → `Nov 16, 2024 9:22 PM`).
+- `downloadSeconds`: 스토어 화면의 다운로드 진행 시간 (기본 3초)
+- `phoneTime`: 촬영 때 맞출 폰 시각. 앱은 쓰지 않고 큐시트에만 나옵니다.
+- `history`: 이 씬에만 미리 깔아 둘 메시지 (앞 씬 대화 다음에 즉시 표시)
+- `steps`: 순서대로 재생
 
 | 단계 | 형식 |
 |---|---|
@@ -210,10 +231,12 @@ python3 -m http.server 8000                      # 다른 터미널에서
 
 ---
 
-## 나중에 할 것 (메모)
+## 9. 큐시트와 초안 문서
 
-- **이어 붙은 대화창:** 씬마다 빈 화면에서 시작하지 않고, 앞 씬들의 대화가 이어진 같은 대화창으로 보이게.
-  붙일 자리는 `js/engine.js`의 `historyFor()`.
-- **다운로드 진행 속도 조절:** 지금 약 2초(살짝 빠름). 촬영하며 맞출 수 있게 `scenes.json`에서 바꿀 수 있게.
-  지금은 `js/views/download.js`의 `DOWNLOAD_MS`.
-- **앱 열리는 모션:** `Open`을 누르면 실제 폰처럼 아이콘 위치에서 앱 화면이 확대되며 열리게.
+```bash
+python3 tools/cue-sheet.py       # scenes.json → docs/cue-sheet.md
+python3 tools/format-scenes.py   # scenes.json 줄 정리 (내용은 그대로)
+```
+
+- `docs/cue-sheet.md`: 씬별 시작 화면, 배우 동작, 화면 대사, 걸리는 시간, 맞출 폰 시각. `scenes.json`을 고치면 다시 만드세요.
+- `docs/content-drafts.md`: 대본에 없어 초안으로 채운 내용과 임의로 정한 설정값 목록. `scenes.json`에서는 `작가 확인`으로 검색.
