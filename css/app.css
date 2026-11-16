@@ -657,18 +657,19 @@ a { color: var(--accent); }
 .store-shot span { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .store-shot b { font-size: clamp(20px, 6.6vw, 26px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
 
-/* Open 전환: 스토어 카드가 작아지며 왼쪽으로 나가고, 맵쳐 카드가 오른쪽에서 들어와 전체 화면으로 커진다.
-   두 카드는 같은 시간표(1초)를 쓴다: 0~22% 작아짐 / 22~72% 가로 이동 / 72~100% 커짐 */
-.switch-backdrop { z-index: 25; background: #0B0D0C; animation: none; }
+/* Open 전환 (readme/화면전환_예시.mp4 기준, 전체 약 0.56초).
+   앞 45%: 스토어 화면이 둥근 카드로 작아지면서 동시에 왼쪽으로 밀려 나가고, 맵쳐 카드가 바로 뒤따라 들어온다.
+           두 카드 사이는 화면 폭의 4% 정도. 맵쳐 카드가 가운데 왔을 때 스토어 카드는 왼쪽 끝에 살짝 걸쳐 있다.
+   뒤 55%: 맵쳐 카드가 전체 화면으로 커지며 스토어 카드를 덮는다(끝에서 부드럽게 감속). */
+.switch-backdrop { z-index: 25; background: linear-gradient(160deg, #1A1F1D 0%, #0A0C0B 55%, #050606 100%); animation: none; }
 .overlay-download.switch-out {
   z-index: 26;
   pointer-events: none;
-  animation: switch-out 1s cubic-bezier(.4, 0, .2, 1) both;
+  animation: switch-out .56s linear both;
 }
 @keyframes switch-out {
-  0% { transform: translateX(0) scale(1); border-radius: 0; }
-  22% { transform: translateX(0) scale(.86); border-radius: 40px; }
-  72%, 100% { transform: translateX(-106%) scale(.86); border-radius: 40px; }
+  0% { transform: translateX(0) scale(1); border-radius: 0; animation-timing-function: cubic-bezier(.45, 0, .35, 1); }
+  45%, 100% { transform: translateX(-90%) scale(.86); border-radius: 40px; }
 }
 .overlay-launch {
   z-index: 30;
@@ -677,10 +678,10 @@ a { color: var(--accent); }
   animation: none;
   transition: opacity .26s ease;
 }
-.overlay-launch.switch-in { animation: switch-in 1s cubic-bezier(.4, 0, .2, 1) both; }
+.overlay-launch.switch-in { animation: switch-in .56s linear both; }
 @keyframes switch-in {
-  0%, 22% { transform: translateX(106%) scale(.86); border-radius: 40px; }
-  72% { transform: translateX(0) scale(.86); border-radius: 40px; }
+  0% { transform: translateX(100%) scale(.86); border-radius: 40px; animation-timing-function: cubic-bezier(.45, 0, .35, 1); }
+  45% { transform: translateX(0) scale(.86); border-radius: 40px; animation-timing-function: cubic-bezier(.2, .75, .25, 1); }
   100% { transform: translateX(0) scale(1); border-radius: 0; }
 }
 .overlay-launch.leaving { opacity: 0; }

@@ -61,7 +61,7 @@
 | # | 배우 동작 | 화면에 나오는 것 | 걸리는 시간 |
 |---|---|---|---|
 | 1 | `Download` 탭 | 진행 바가 3초 동안 참 → 버튼이 `Open`으로 | 3초 |
-| 2 | `Open` 탭 | 스토어 카드가 왼쪽으로 밀려 나가고 맵쳐 카드가 들어와 커짐 → 마스코트 → 인사 화면 | 약 2.4초 |
+| 2 | `Open` 탭 | 스토어 카드가 왼쪽으로 밀려 나가고 맵쳐 카드가 들어와 커짐 → 마스코트 → 인사 화면 | 약 2초 |
 | 3 | 마이크 탭(음성 모드, `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 5초 뒤 자동 | (시간 구분선 `Today 현재 시각`) 🎤 “Is anyone going to contact me tonight?” |  |
 | 4 | (자동) 탭하면 글자 즉시 완성 | Based on an analysis of your behavioral patterns and those of the people in your contacts, there is approximately a 99.1% probability that Lee Chaeyeon will call you in 17 minutes, at 9:39 p.m., to invite you out for drinks!<br>[링크: Detailed Analysis Report ›] | 로딩 2초 `One moment, please…`, 글자 출력 약 12초 (224자, 초당 18자) |
 | 5 | 대사를 말함 → 화면 아무 곳 탭, 또는 5초 뒤 자동 | (시간 구분선 `Today 현재 시각`) 🎤 “What's going to happen in one minute?” |  |

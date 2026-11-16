@@ -17,7 +17,7 @@ PAUSE_BEFORE_LOADING_S = 0.35
 PROGRESS_DELAY_S = 0.8
 DEFAULT_TYPING_CPS = 18
 DEFAULT_DOWNLOAD_S = 3
-OPEN_MOTION_S = 2.4   # 카드 전환 1.0 + 마스코트 1.1 + 넘어가기 0.3
+OPEN_MOTION_S = 2.0   # 카드 전환 0.56 + 마스코트 1.1 + 넘어가기 0.3
 PAY_PROCESSING_S = 0.8
 
 UNITS = {"m": "분", "h": "시간", "d": "일", "w": "주", "y": "년"}

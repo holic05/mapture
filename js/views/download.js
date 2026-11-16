@@ -3,7 +3,7 @@ import { mascotSVG, faceSVG } from '../mascot.js';
 import { openOverlay, wait } from './overlay.js';
 
 const DEFAULT_DOWNLOAD_SECONDS = 3; // 씬의 downloadSeconds로 바꿀 수 있다
-const SWITCH_MS = 1000;             // 스토어 카드가 밀려 나가고 맵쳐 카드가 들어와 커지는 시간
+const SWITCH_MS = 560;              // 스토어 카드가 밀려 나가고 맵쳐 카드가 들어와 커지는 시간 (css의 switch-out/in과 같게)
 const SPLASH_MS = 1100;             // 마스코트 시작 화면
 
 const ICON = {
@@ -96,8 +96,8 @@ export function showDownload(root, hooks = {}) {
 
 /**
  * Open을 눌렀을 때의 전환 (iPhone에서 다른 앱이 열릴 때의 모션):
- *  1) 스토어 화면이 둥근 모서리 카드로 살짝 작아지며 왼쪽으로 밀려 나간다
- *  2) 어두운 배경을 사이에 두고 맵쳐 카드가 오른쪽에서 들어와 가운데서 전체 화면으로 커진다
+ *  1) 스토어 화면이 둥근 모서리 카드로 작아지면서 동시에 왼쪽으로 밀려 나간다
+ *  2) 어두운 배경 위로 맵쳐 카드가 바로 뒤따라 오른쪽에서 들어와 가운데서 전체 화면으로 커진다 (1~2 합쳐 약 0.56초)
  *  3) 마스코트 시작 화면 (가운데서 커지며 등장, 고리 한 바퀴)
  *  4) 채팅 인사 화면으로 넘어간다
  */

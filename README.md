@@ -63,7 +63,7 @@ python3 -m http.server 8000
 4. 확인할 것
    - DevTools → **Application** 탭 → **Manifest**: 이름·아이콘이 보이고 오류가 없는지
    - **Application → Service workers**: `sw.js`가 *activated and is running*인지
-   - **Application → Cache storage**: `mapture-v6`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
+   - **Application → Cache storage**: `mapture-v7`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
    - **Network** 탭에서 *Offline* 체크 후 새로고침 → 그래도 열리는지
 
 > 개발 중에는 **Application → Service workers → "Update on reload"**를 체크해 두면
@@ -107,7 +107,7 @@ python3 -m http.server 8000
 | 고친 것 | 할 일 |
 |---|---|
 | `scenes.json`만 | 그냥 push. 앱을 다시 열면 반영됩니다 (scenes.json은 항상 네트워크 먼저 받아옴). |
-| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v6'` → `'v7'`) push. |
+| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v7'` → `'v8'`) push. |
 
 `CACHE_VERSION`을 올린 뒤 폰에서:
 

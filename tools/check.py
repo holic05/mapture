@@ -319,7 +319,7 @@ def t_voice(run):
     page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=6000)
     run.shot(page, "download-open-360")
     page.tap(".store-btn")
-    page.wait_for_timeout(1500)
+    page.wait_for_timeout(1100)
     run.shot(page, "launch-360")
     page.wait_for_selector(".overlay", state="detached", timeout=6000)
     check("launch animation ends on the empty chat", page.locator(".empty").is_visible() and page.inner_text("[data-ref=plan]") == "Free")
@@ -559,7 +559,7 @@ def t_open(run):
     page.tap(".store-btn")
     frames = {}
     start = time.time()
-    for name, at in [("shrink", 0.16), ("slide", 0.47), ("grow", 0.86), ("mascot", 1.55)]:
+    for name, at in [("shrink", 0.04), ("slide", 0.15), ("grow", 0.40), ("mascot", 1.15)]:
         page.wait_for_timeout(max(0, int((at - (time.time() - start)) * 1000)))
         frames[name] = page.evaluate("""() => { const m = (el) => el ? new DOMMatrix(getComputedStyle(el).transform) : null;
           const store = document.querySelector('.overlay-download'), card = document.querySelector('.overlay-launch');
