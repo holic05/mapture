@@ -14,7 +14,12 @@ js/engine.js          씬 엔진 (단계 진행, 로딩, 타이머)
 js/time.js            시각 값 처리 ("now", "-5m", "+17m")
 js/fatal.js           화면 전체 오류 표시
 js/mascot.js          마스코트 SVG
-js/views/chat.js      채팅 화면 (말풍선, 타이핑 출력, 고스트 타이핑)
+js/longpress.js       길게 누르기 (숨은 씬 메뉴용)
+js/views/chat.js      채팅 화면 (말풍선, 타이핑 출력, 고스트 타이핑, 음성 모드)
+js/views/overlay.js   채팅 위를 덮는 전체 화면의 공통 틀
+js/views/download.js  다운로드 페이지 + 실행 애니메이션
+js/views/paywall.js   결제 화면 + 결제 완료
+js/views/report.js    Detailed Analysis Report
 js/views/sceneMenu.js 숨은 씬 메뉴
 scenes.json           씬 내용 ← 대사·숫자는 여기만 고치면 됨
 manifest.json         PWA 설치 정보 (이름, 아이콘, 주소창 없는 실행)
@@ -53,7 +58,7 @@ python3 -m http.server 8000
 4. 확인할 것
    - DevTools → **Application** 탭 → **Manifest**: 이름·아이콘이 보이고 오류가 없는지
    - **Application → Service workers**: `sw.js`가 *activated and is running*인지
-   - **Application → Cache storage**: `mapture-v2`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
+   - **Application → Cache storage**: `mapture-v3`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
    - **Network** 탭에서 *Offline* 체크 후 새로고침 → 그래도 열리는지
 
 > 개발 중에는 **Application → Service workers → "Update on reload"**를 체크해 두면
@@ -97,7 +102,7 @@ python3 -m http.server 8000
 | 고친 것 | 할 일 |
 |---|---|
 | `scenes.json`만 | 그냥 push. 앱을 다시 열면 반영됩니다 (scenes.json은 항상 네트워크 먼저 받아옴). |
-| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v2'` → `'v3'`) push. |
+| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v3'` → `'v4'`) push. |
 
 `CACHE_VERSION`을 올린 뒤 폰에서:
 
@@ -118,11 +123,18 @@ python3 -m http.server 8000
 
 - **씬 고르기:** 왼쪽 위 ☰ 버튼을 **길게(0.6초)** 누르면 씬 목록이 열립니다. 고르면 그 씬의 시작 상태로 완전히 리셋됩니다.
   같은 씬을 다시 고르면 테이크를 처음부터 다시 찍을 수 있습니다. (☰ 짧게 누르기는 아무 일도 없음)
+  - 다운로드·결제·리포트 화면에서는 **왼쪽 위 버튼(뒤로 가기 / 닫기)** 을, 결제 완료 화면에서는 **체크 원**을 길게 누르면 됩니다.
 - 마지막으로 고른 씬은 기억되어, 앱을 다시 열면 그 씬의 시작 상태로 열립니다.
 - **타이핑 씬:** 입력창을 탭해 키보드를 올리고 **아무 키나** 누르면 정해진 문장이 한 글자씩 써집니다.
   백스페이스는 한 글자 지움. 끝까지 쓰고 Send(또는 키보드의 보내기 키)를 누르면 질문이 올라갑니다.
-- **음성 씬:** 마이크 버튼을 탭하면 질문이 올라갑니다. (음성 모드 화면은 3단계에서 추가)
+  - 키보드가 **한글이든 영어든** 상관없습니다. 키를 한 번 누르면 한 글자가 써집니다.
+- **음성 씬:** 마이크 버튼을 탭하면 음성 모드(아래쪽이 초록빛으로 번지고 `Listening…`)가 됩니다.
+  그 상태에서 **화면 아무 곳이나 한 번 더 탭**하면 질문이 올라가고 답변이 이어집니다.
+  음성 모드는 다음 질문을 위해 계속 켜져 있고, X를 누르면 일반 입력창으로 돌아갑니다.
 - **답변 출력 중** 말풍선을 탭하면 남은 글자가 즉시 전부 표시됩니다.
+- **S#4:** 스토어 화면 → `Download`(약 2초) → `Open` → 실행 애니메이션 → 채팅. 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
+- **결제:** 요금 카드를 탭해 고르고 `Subscribe for …` → 완료 화면 → `Start predicting`. 이후 상단 플랜이 `Premium`으로 바뀝니다.
+- **리포트:** 답변 아래 `Detailed Analysis Report ›`를 탭. 왼쪽 위 뒤로 가기로 같은 대화로 돌아옵니다.
 - 개발용: 주소 뒤에 `?scene=S08`을 붙이면 그 씬으로 바로 시작합니다.
 
 ---
@@ -132,7 +144,7 @@ python3 -m http.server 8000
 한 단계가 한 줄입니다. 고쳐서 push하면 앱을 다시 열 때 반영됩니다 (`CACHE_VERSION` 올릴 필요 없음).
 문법이 틀리면 앱 화면 전체에 주황색 오류와 줄 번호가 뜹니다. JSON에는 주석을 쓸 수 없습니다.
 
-씬: `id`, `title`(씬 메뉴에 표시), `start`, `plan`, `profile`, `textScale`, `history`(즉시 표시), `steps`(순서대로 재생)
+씬: `id`, `title`(씬 메뉴에 표시), `start`(`chat` / `download` / `paywall`: 첫 화면), `plan`, `profile`, `textScale`, `history`(즉시 표시), `steps`(순서대로 재생)
 
 | 단계 | 형식 |
 |---|---|
@@ -148,7 +160,10 @@ python3 -m http.server 8000
   `size`는 `normal`/`huge`. `up`이 `true`면 ▲(파랑), `false`면 ▼(주황), `up`과 `delta`를 둘 다 빼면 화살표 없음.
 - `body`: 본문. 빈 줄(`\n\n`)로 문단을 나눌 수 있음.
 - `list`: `[{"title":"Recommended","items":["...","..."]}, ...]`
-- `disclaimer`, `button`(`{"label":"...","action":"paywall"}`), `report`
+- `disclaimer`, `button`(`{"label":"...","action":"paywall"}`: 누르면 결제 화면)
+- `report`: `{"question":"...","askedAt":"now","items":[{"time":"+17m","event":"...","prob":"99.1%"}],"basedOn":["..."]}`.
+  있으면 답변 아래에 리포트 링크가 생깁니다. `askedAt`이 `"now"`면 그 답변이 뜬 시각이고,
+  `items`의 `"+17m"`은 **그 질문 시각으로부터** 17분 뒤입니다 (대사의 "in 17 minutes"와 항상 맞도록).
 - `typingSpeed`: 초당 글자 수 (기본 18)
 - `delay`: 아무것도 표시하지 않고 기다리는 초
 - `note`: 화면에 나오지 않는 메모 (작가 확인용 `[TODO]`를 여기에 적어 둠)

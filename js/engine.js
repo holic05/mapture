@@ -19,14 +19,31 @@ export class Engine {
     this.gen = 0;            // 씬을 리셋할 때마다 1 증가 → 이전 씬의 비동기 작업은 전부 무효
     this.timers = new Set();
     this.scene = null;
+    this.scenes = [];        // 전체 씬 목록 (app.js가 넣어 준다)
     this.sceneStart = new Date();
+  }
+
+  /** 진행 중인 재생을 멈춘다 (타이머 전부 취소) */
+  stop() {
+    this.gen++;
+    for (const id of this.timers) clearTimeout(id);
+    this.timers.clear();
+  }
+
+  /**
+   * 씬 시작 시 애니메이션 없이 깔아 둘 메시지 목록.
+   * 지금은 그 씬의 history뿐이다.
+   * (예정) 앞 씬들의 대화를 이어 붙여 하나의 대화창처럼 보이게 하려면 여기서
+   * this.scenes(전체 씬 목록)를 보고 앞 씬의 history + steps를 앞에 붙여 돌려주면 된다.
+   * 아래 start()는 어떤 단계든 즉시 그릴 수 있으므로 다른 곳은 고칠 필요가 없다.
+   */
+  historyFor(scene) {
+    return scene.history || [];
   }
 
   /** 씬을 시작 상태로 완전히 리셋하고 재생 시작 */
   start(scene) {
-    this.gen++;
-    for (const id of this.timers) clearTimeout(id);
-    this.timers.clear();
+    this.stop();
 
     const gen = this.gen;
     this.scene = scene;
@@ -37,7 +54,7 @@ export class Engine {
     this.view.reset(scene);
 
     // history: 애니메이션 없이 즉시
-    for (const step of scene.history || []) {
+    for (const step of this.historyFor(scene)) {
       if (step.type === 'divider') this.view.addDivider(dividerLabel(step.time, this.sceneStart));
       else if (step.type === 'user') this.view.addUser(step.text, { voice: step.input === 'voice' });
       else if (step.type === 'mapture') this.view.addMaptureInstant(step);

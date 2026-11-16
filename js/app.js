@@ -3,6 +3,10 @@ import { showFatal } from './fatal.js';
 import { Engine } from './engine.js';
 import { createChat } from './views/chat.js';
 import { openSceneMenu } from './views/sceneMenu.js';
+import { closeOverlays } from './views/overlay.js';
+import { showDownload } from './views/download.js';
+import { showPaywall } from './views/paywall.js';
+import { showReport } from './views/report.js';
 
 const STORAGE_KEY = 'mapture.scene';
 const app = document.getElementById('app');
@@ -131,25 +135,46 @@ async function main() {
   let scenes = [];
   let current = null;
 
-  const startScene = (scene) => {
-    current = scene;
-    remember(scene.id);
-    engine.start(scene);
+  const openMenu = () => {
+    if (scenes.length) openSceneMenu(app, scenes, current?.id, startScene);
   };
 
+  /** 결제 화면. 완료되면 플랜 표시가 Premium으로 바뀌고, 닫으면 아래의 채팅 화면이 그대로 이어진다 */
+  const openPaywall = () => showPaywall(app, {
+    onMenuLongPress: openMenu,
+    onPaid: () => chat.setPlan('Premium'),
+  });
+
   const chat = createChat(app, {
-    onMenuLongPress: () => {
-      if (scenes.length) openSceneMenu(app, scenes, current?.id, startScene);
-    },
-    // 3단계에서 연결: 결제 화면, Detailed Analysis Report
-    onAction: () => {},
-    onReport: () => {},
+    onMenuLongPress: openMenu,
+    onAction: (action) => { if (action === 'paywall') openPaywall(); },
+    onReport: (step, shownAt) => showReport(app, step.report, {
+      sceneStart: engine.sceneStart, shownAt, onMenuLongPress: openMenu,
+    }),
   });
   const engine = new Engine(chat);
+
+  /** 씬을 시작 상태로 완전히 리셋한다. scene.start에 따라 첫 화면이 달라진다 */
+  function startScene(scene) {
+    current = scene;
+    remember(scene.id);
+    closeOverlays(app);
+    engine.stop();
+
+    if (scene.start === 'download') {
+      // 스토어 화면 아래에 빈 채팅 화면을 준비해 두고, 실행 애니메이션이 끝날 때 씬을 시작한다
+      chat.reset(scene);
+      showDownload(app, { onMenuLongPress: openMenu, onLaunched: () => engine.start(scene) });
+      return;
+    }
+    engine.start(scene);
+    if (scene.start === 'paywall') openPaywall();
+  }
 
   const data = await loadScenes();
   if (!data) return;
   scenes = data.scenes;
+  engine.scenes = scenes;
 
   // 우선순위: URL ?scene=S08 → 마지막으로 고른 씬 → 첫 번째 씬
   const wanted = new URLSearchParams(location.search).get('scene');
