@@ -18,7 +18,7 @@ js/mascot.js          마스코트 SVG
 js/longpress.js       길게 누르기 (숨은 씬 메뉴용)
 js/views/chat.js      채팅 화면 (말풍선, 타이핑 출력, 고스트 타이핑, 음성 모드)
 js/views/overlay.js   채팅 위를 덮는 전체 화면의 공통 틀
-js/views/download.js  다운로드 페이지 + Open 전환 모션 + 마스코트 시작 화면
+js/views/download.js  다운로드 페이지 + Open 전환 모션 (마스코트 시작 화면 카드)
 js/views/paywall.js   결제 화면 + 결제 완료
 js/views/report.js    Detailed Analysis Report
 js/views/sceneMenu.js 숨은 씬 메뉴
@@ -63,7 +63,7 @@ python3 -m http.server 8000
 4. 확인할 것
    - DevTools → **Application** 탭 → **Manifest**: 이름·아이콘이 보이고 오류가 없는지
    - **Application → Service workers**: `sw.js`가 *activated and is running*인지
-   - **Application → Cache storage**: `mapture-v9`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
+   - **Application → Cache storage**: `mapture-v10`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
    - **Network** 탭에서 *Offline* 체크 후 새로고침 → 그래도 열리는지
 
 > 개발 중에는 **Application → Service workers → "Update on reload"**를 체크해 두면
@@ -107,7 +107,7 @@ python3 -m http.server 8000
 | 고친 것 | 할 일 |
 |---|---|
 | `scenes.json`만 | 그냥 push. 앱을 다시 열면 반영됩니다 (scenes.json은 항상 네트워크 먼저 받아옴). |
-| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v9'` → `'v10'`) push. |
+| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v10'` → `'v11'`) push. |
 
 `CACHE_VERSION`을 올린 뒤 폰에서:
 
@@ -140,7 +140,7 @@ python3 -m http.server 8000
     다음 질문은 **알약을 탭**해야 다시 듣기 시작합니다. 그 뒤는 같습니다 (탭하거나 `autoSubmit` 시간 뒤 올라감).
   - X를 누르면 일반 입력창으로 돌아갑니다.
 - **답변 출력 중** 말풍선을 탭하면 남은 글자가 즉시 전부 표시됩니다.
-- **S#4:** 스토어 화면 → `Download`(3초, `downloadSeconds`로 조절) → `Open` → 스토어 카드가 왼쪽으로 밀려 나가고 맵쳐 카드가 들어와 커짐 → 마스코트 → 인사 화면. 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
+- **S#4:** 스토어 화면 → `Download`(3초, `downloadSeconds`로 조절) → `Open` → 스토어 카드가 왼쪽으로 밀려 나가고, 마스코트가 보이는 맵쳐 카드가 들어와 전체 화면으로 커짐 → 바로 인사 화면 (약 1초). 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
 - **결제:** 요금 카드를 탭해 고르고 `Subscribe for …` → 완료 화면 → `Start predicting`. 이후 상단 플랜이 `Premium`으로 바뀝니다.
 - **리포트:** 답변 아래 `Detailed Analysis Report ›`를 탭. 왼쪽 위 뒤로 가기로 같은 대화로 돌아옵니다.
 - **이어지는 대화:** 씬을 고르면 앞 씬들의 대화가 위에 이어 붙은 채로 열립니다 (같은 대화창처럼). 날짜가 다른 씬은 시간 구분선으로 구분됩니다.

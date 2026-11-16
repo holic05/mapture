@@ -667,8 +667,6 @@ a { color: var(--accent); }
 }
 .overlay-launch {
   z-index: 30;
-  align-items: center;
-  justify-content: center;
   animation: none;
   transition: opacity .26s ease;
 }
@@ -680,21 +678,10 @@ a { color: var(--accent); }
 }
 .overlay-launch.leaving { opacity: 0; }
 
-/* 마스코트 시작 화면: 가운데서 커지며 등장, 고리가 한 바퀴 돈다 */
-.launch-mascot { opacity: 0; }
-.launch-mascot .mascot { display: block; overflow: visible; }
-.show-mascot .launch-mascot { animation: launch-grow 1s cubic-bezier(.2, .9, .25, 1.15) both; }
-@keyframes launch-grow {
-  0% { transform: scale(.12); opacity: 0; }
-  25% { opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-.show-mascot .mascot-ring-back { transform-origin: 60px 64px; animation: launch-ring .95s cubic-bezier(.3, .6, .2, 1) both; }
-@keyframes launch-ring { from { transform: rotate(-360deg); } to { transform: rotate(0deg); } }
-.show-mascot .mascot-ring-front { animation: launch-late .25s ease-out .8s both; }
-.show-mascot .mascot-sparkle { transform-origin: 101px 18px; animation: launch-pop .3s ease-out .8s both; }
-@keyframes launch-late { from { opacity: 0; } }
-@keyframes launch-pop { from { opacity: 0; transform: scale(0); } }
+/* 마스코트 시작 화면: 인사 화면과 같은 뼈대에서 마스코트만 보인다 (나머지는 자리만 차지) */
+.overlay-launch .ghost { visibility: hidden; }
+.overlay-launch .launch-mascot { flex: 0 1 128px; min-height: 0; max-width: 128px; aspect-ratio: 1; display: flex; }
+.overlay-launch .launch-mascot .mascot { flex: 1; width: 100%; height: 100%; max-width: none; }
 
 /* ----- ③ 결제 화면 (S05-Paywall) ----- */
 .pay-main {

@@ -319,7 +319,7 @@ def t_voice(run):
     page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=6000)
     run.shot(page, "download-open-360")
     page.tap(".store-btn")
-    page.wait_for_timeout(1100)
+    page.wait_for_timeout(330)
     run.shot(page, "launch-360")
     page.wait_for_selector(".overlay", state="detached", timeout=6000)
     check("launch animation ends on the empty chat", page.locator(".empty").is_visible() and page.inner_text("[data-ref=plan]") == "Free")
@@ -586,26 +586,33 @@ def t_open(run):
     page.tap(".store-btn")
     frames = {}
     start = time.time()
-    for name, at in [("shrink", 0.04), ("slide", 0.15), ("grow", 0.40), ("mascot", 1.15)]:
+    for name, at in [("shrink", 0.04), ("slide", 0.15), ("grow", 0.40), ("full", 0.66)]:
         page.wait_for_timeout(max(0, int((at - (time.time() - start)) * 1000)))
         frames[name] = page.evaluate("""() => { const m = (el) => el ? new DOMMatrix(getComputedStyle(el).transform) : null;
           const store = document.querySelector('.overlay-download'), card = document.querySelector('.overlay-launch');
           const a = m(store), b = m(card);
           return { backdrop: !!document.querySelector('.switch-backdrop'), store: a && [a.a, a.e], card: b && [b.a, b.e],
                    radius: card && getComputedStyle(card).borderTopLeftRadius,
-                   mascot: card && getComputedStyle(card.querySelector('.launch-mascot')).opacity }; }""")
+                   mascot: card && (() => { const r = card.querySelector('.launch-mascot svg').getBoundingClientRect(); return [r.x, r.y, r.width]; })() }; }""")
         run.shot(page, f"open-{name}")
     w = page.viewport_size["width"]
     f = frames
     check("1) store page shrinks into a rounded card over a dark backdrop",
           f["shrink"]["backdrop"] and f["shrink"]["store"] and 0.84 < f["shrink"]["store"][0] < 1, f["shrink"])
-    check("2) store card slides out left while the Mapture card comes in from the right",
-          f["slide"]["store"] and f["slide"]["store"][1] < -0.1 * w and 0 < f["slide"]["card"][1] < w and f["slide"]["card"][0] < 0.9, f["slide"])
+    check("2) store card slides out left while the Mapture card, already showing the mascot, comes in from the right",
+          f["slide"]["store"] and f["slide"]["store"][1] < -0.1 * w and 0 < f["slide"]["card"][1] < w and f["slide"]["card"][0] < 0.9
+          and f["slide"]["mascot"][2] > 80, f["slide"])
     check("3) Mapture card grows to full screen in the centre",
-          f["grow"]["card"] and abs(f["grow"]["card"][1]) < 1 and f["grow"]["card"][0] > 0.86 and f["grow"]["mascot"] == "0", f["grow"])
-    check("4) then the mascot splash", f["mascot"]["card"] and not f["mascot"]["backdrop"] and float(f["mascot"]["mascot"]) > 0, f["mascot"])
+          f["grow"]["card"] and abs(f["grow"]["card"][1]) < 1 and f["grow"]["card"][0] > 0.86, f["grow"])
+    check("4) full screen: backdrop gone, mascot at its final size", f["full"]["card"] and not f["full"]["backdrop"]
+          and f["full"]["card"][0] == 1 and abs(f["full"]["mascot"][2] - 128) < 1, f["full"])
     page.wait_for_selector(".overlay", state="detached", timeout=6000)
-    check("5) ends on the greeting screen", page.locator(".empty").is_visible() and not page.errors, page.errors)
+    total = time.time() - start
+    greet = page.evaluate("(() => { const r = document.querySelector('.empty .mascot').getBoundingClientRect(); return [r.x, r.y, r.width]; })()")
+    same = all(abs(a - b) < 1 for a, b in zip(greet, f["full"]["mascot"]))
+    check("5) straight to the greeting screen (no separate mascot stage), about 1s in total", page.locator(".empty").is_visible() and total < 1.6, f"{total:.2f}s")
+    check("6) splash mascot sits exactly where the greeting mascot is", same, f"{f['full']['mascot']} vs {greet}")
+    check("no page errors", not page.errors, page.errors)
     page.context.close()
 
 

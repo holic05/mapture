@@ -61,7 +61,7 @@
 | # | 배우 동작 | 화면에 나오는 것 | 걸리는 시간 |
 |---|---|---|---|
 | 1 | `Download` 탭 | 진행 바가 3초 동안 참 → 버튼이 `Open`으로 | 3초 |
-| 2 | `Open` 탭 | 스토어 카드가 왼쪽으로 밀려 나가고 맵쳐 카드가 들어와 커짐 → 마스코트 → 인사 화면 | 약 2초 |
+| 2 | `Open` 탭 | 스토어 카드가 왼쪽으로 밀려 나가고, 마스코트가 보이는 맵쳐 카드가 들어와 전체 화면으로 커짐 → 바로 인사 화면 | 약 1초 |
 | 3 | 마이크 탭(음성 모드, `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 5초 뒤 자동 | (시간 구분선 `Today 현재 시각`) 🎤 “Is anyone going to contact me tonight?” |  |
 | 4 | (자동) 탭하면 글자 즉시 완성 | Based on an analysis of your behavioral patterns and those of the people in your contacts, there is approximately a 99.1% probability that Lee Chaeyeon will call you in 17 minutes, at 9:39 p.m., to invite you out for drinks!<br>[링크: Detailed Analysis Report ›] | 로딩 2초 `One moment, please…`, 글자 출력 약 12초 (224자, 초당 18자) |
 | 5 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 5초 뒤 자동 | (시간 구분선 `Today 현재 시각`) 🎤 “What's going to happen in one minute?” |  |
@@ -74,7 +74,7 @@
 | 12 | (자동) 탭하면 글자 즉시 완성 | Oh! I'm sorry, but it looks like you've used up all your predictions on the Mapture Free plan. Upgrade to Premium now to receive 200 prediction tokens per day and enhanced long-term simulation features!<br>[버튼: Upgrade to Premium] | 로딩 2초 `One moment, please…`, 글자 출력 약 11초 (202자, 초당 18자) |
 | 13 | `Upgrade to Premium` 탭 | 결제 화면 → 결제하면 같은 대화로 돌아오고 플랜이 `Premium` |  |
 
-자동으로 진행되는 시간 합계: 약 69초 (배우 동작 시간 제외)
+자동으로 진행되는 시간 합계: 약 68초 (배우 동작 시간 제외)
 
 확인 필요:
 - [TODO: 작가 확인] 카페 버전 초안. 대본 원문: In one minute, there is a 99.98% probability that a delivery rider bringing fried chicken to the apartment upstairs will pass by your front door!

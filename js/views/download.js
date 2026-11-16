@@ -4,7 +4,7 @@ import { openOverlay, wait } from './overlay.js';
 
 const DEFAULT_DOWNLOAD_SECONDS = 3; // 씬의 downloadSeconds로 바꿀 수 있다
 const SWITCH_MS = 560;              // 스토어 카드가 밀려 나가고 맵쳐 카드가 들어와 커지는 시간 (css의 switch-out/in과 같게)
-const SPLASH_MS = 1100;             // 마스코트 시작 화면
+const SPLASH_HOLD_MS = 220;         // 전체 화면이 된 뒤 인사 화면으로 넘어가기 전 잠깐 머무는 시간
 
 const ICON = {
   back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1D1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
@@ -95,18 +95,19 @@ export function showDownload(root, hooks = {}) {
 }
 
 /**
- * Open을 눌렀을 때의 전환 (iPhone에서 다른 앱이 열릴 때의 모션):
+ * Open을 눌렀을 때의 전환 (readme/화면전환_예시.mp4: iPhone에서 다른 앱이 열릴 때의 모션):
  *  1) 스토어 화면이 둥근 모서리 카드로 작아지면서 동시에 왼쪽으로 밀려 나간다
  *  2) 어두운 배경 위로 맵쳐 카드가 바로 뒤따라 오른쪽에서 들어와 가운데서 전체 화면으로 커진다 (1~2 합쳐 약 0.56초)
- *  3) 마스코트 시작 화면 (가운데서 커지며 등장, 고리 한 바퀴)
- *  4) 채팅 인사 화면으로 넘어간다
+ *     카드에는 처음부터 마스코트 시작 화면이 보인다 (참고 영상에서 카드 안에 앱 화면이 이미 보이는 것처럼)
+ *  3) 전체 화면이 되면 곧바로 인사 화면으로 넘어간다. 마스코트는 인사 화면의 마스코트와 같은 자리에 있어서
+ *     마스코트는 그대로 있고 인사말·상단 바·입력창이 나타나는 것처럼 보인다
  */
 async function launch(root, hooks, store) {
   const backdrop = document.createElement('div');
   backdrop.className = 'overlay switch-backdrop';
   root.appendChild(backdrop);
   store.el.classList.add('switch-out');
-  const splash = openOverlay(root, 'launch', `<div class="launch-mascot">${mascotSVG(128)}</div>`);
+  const splash = openOverlay(root, 'launch', SPLASH_HTML);
   splash.el.classList.add('switch-in');
 
   await wait(SWITCH_MS);
@@ -114,12 +115,26 @@ async function launch(root, hooks, store) {
   store.close();
   backdrop.remove();
   splash.el.classList.remove('switch-in');
-  splash.el.classList.add('show-mascot');
 
-  await wait(SPLASH_MS);
+  await wait(SPLASH_HOLD_MS);
   if (!splash.alive()) return;
   hooks.onLaunched?.();
   splash.el.classList.add('leaving');
   await wait(260);
   splash.close();
 }
+
+// 시작 화면: 채팅 인사 화면과 똑같은 뼈대(같은 CSS 클래스)에 마스코트만 보이게 한 것.
+// 뼈대가 같아서 화면 크기가 달라도 마스코트가 인사 화면의 마스코트와 정확히 같은 자리에 온다.
+const SPLASH_HTML = `
+  <div class="topbar"></div>
+  <div class="chat-main">
+    <div class="empty">
+      <div class="empty-hero">
+        <div class="launch-mascot">${mascotSVG(128)}</div>
+        <h1 class="ghost">Hello, user!<br>How can I help you today?</h1>
+      </div>
+      <p class="empty-foot ghost">Oracle Inc. · Mapture 6</p>
+    </div>
+  </div>
+  <div class="composer-wrap ghost"><div class="composer"><div class="round"></div></div></div>`;
