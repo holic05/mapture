@@ -63,7 +63,7 @@ python3 -m http.server 8000
 4. 확인할 것
    - DevTools → **Application** 탭 → **Manifest**: 이름·아이콘이 보이고 오류가 없는지
    - **Application → Service workers**: `sw.js`가 *activated and is running*인지
-   - **Application → Cache storage**: `mapture-v5`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
+   - **Application → Cache storage**: `mapture-v6`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
    - **Network** 탭에서 *Offline* 체크 후 새로고침 → 그래도 열리는지
 
 > 개발 중에는 **Application → Service workers → "Update on reload"**를 체크해 두면
@@ -107,7 +107,7 @@ python3 -m http.server 8000
 | 고친 것 | 할 일 |
 |---|---|
 | `scenes.json`만 | 그냥 push. 앱을 다시 열면 반영됩니다 (scenes.json은 항상 네트워크 먼저 받아옴). |
-| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v5'` → `'v6'`) push. |
+| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v6'` → `'v7'`) push. |
 
 `CACHE_VERSION`을 올린 뒤 폰에서:
 
@@ -161,8 +161,9 @@ Android 뒤로 가기로 앱이 닫히는 것, 번역 제안, 자동 다크 모�
 
 - `id`, `title`(씬 메뉴에 표시), `start`(`chat` / `download` / `paywall`: 첫 화면), `plan`, `profile`, `textScale`
 - `after`: 앞 씬의 id. 그 씬(과 그 앞 씬들)의 대화가 이 씬 위에 이어 붙습니다. 없으면 이 씬만 열립니다.
-- `gap`: 앞 씬으로부터 지난 시간 (`"14h"`, `"2d"`, `"1w"`, `"2y"`). 앞 씬 대화의 시간 구분선이 그만큼 과거로 표시됩니다
+- `gap`: 앞 씬으로부터 지난 시간 (`"30m"`, `"3h"`, `"2d"`, `"1w"`, `"2y"`). 앞 씬 대화의 시간 구분선이 그만큼 과거로 표시됩니다
   (`Yesterday 9:22 PM` → `Mon 9:22 PM` → `Nov 3 9:22 PM` → `Nov 16, 2024 9:22 PM`).
+  분·시간 단위는 **같은 날**이라는 뜻이라 자정 직후에 촬영해도 `Today`로 남습니다. 날짜를 넘기려면 `d`·`w`·`y`를 쓰세요.
 - `downloadSeconds`: 스토어 화면의 다운로드 진행 시간 (기본 3초)
 - `phoneTime`: 촬영 때 맞출 폰 시각. 앱은 쓰지 않고 큐시트에만 나옵니다.
 - `history`: 이 씬에만 미리 깔아 둘 메시지 (앞 씬 대화 다음에 즉시 표시)

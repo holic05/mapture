@@ -13,6 +13,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 
 from playwright.sync_api import sync_playwright
@@ -512,12 +513,25 @@ def t_chain(run):
     this_year = page.evaluate("new Date().getFullYear()")
     check("S15 carries every earlier question exactly once", page.locator(".bubble-user").count() == expect_users,
           f"{page.locator('.bubble-user').count()} vs {expect_users}")
-    check("two-years-earlier scenes are dated with the year; yesterday's scene says Yesterday",
-          any(f", {this_year - 2}" in l for l in labels) and any(l.startswith("Yesterday") for l in labels), labels[:3] + labels[-2:])
+    check("two-years-earlier scenes are dated with the year; same-day S14 stays Today",
+          any(re.search(rf", ({this_year - 2}|{this_year - 3})", l) for l in labels) and labels[-1].startswith("Today"), labels[:2] + labels[-2:])
     hobby = page.evaluate("[...document.querySelectorAll('.list-title')].filter(e => e.textContent === 'Low-risk hobbies').length")
     check("no duplicated answers (hobby list appears once)", hobby == 1, hobby)
     check("no overflow with the long chained history", not no_overflow(page), no_overflow(page))
     run.shot(page, "chain-s15")
+    page.context.close()
+
+    # 같은 날인 씬은 자정 직후에 촬영해도 Yesterday로 넘어가지 않는다
+    page = run.page(False, 390, 844)
+    page.clock.install(time="2026-03-10T00:10:00")
+    run.open(page, "S08", chain=True)
+    labels = page.locator(".time-divider").all_inner_texts()
+    check("shot just after midnight: same-day S07 still says Today, older scenes do not",
+          labels[-1].startswith("Today") and not labels[0].startswith("Today"), labels[:1] + labels[-2:])
+    run.open(page, "S10", chain=True)
+    labels = page.locator(".time-divider").all_inner_texts()
+    check("S10 (same day as S09): both scenes' dividers say Today",
+          labels[-1].startswith("Today") and labels[-2].startswith("Today"), labels[-4:])
     page.context.close()
 
     page = run.page("S05", chain=True)

@@ -58,10 +58,18 @@ export class Engine {
     let t = this.sceneStart.getTime();
     let later = scene;
     for (let i = chain.length - 1; i >= 0; i--) {
+      const dayStart = new Date(t).setHours(0, 0, 0, 0);
       t -= durationMs(later.gap);
+      // 분·시간 단위 gap("30m", "3h")은 "같은 날"이라는 뜻이다. 자정 직후에 촬영해도
+      // 앞 씬이 전날(Yesterday)로 넘어가지 않게 그날 0시에서 멈춘다. 날짜를 넘기려면 d·w·y 단위를 쓴다.
+      if (/[mh]\s*$/.test(String(later.gap ?? '')) && t < dayStart) t = dayStart;
       bases.set(chain[i], new Date(t));
       later = chain[i];
     }
+
+    // 각 앞 씬이 끝나야 하는 시각 = 그다음 씬의 시작 시각
+    const ends = new Map();
+    chain.forEach((prev, i) => ends.set(prev, (i + 1 < chain.length ? bases.get(chain[i + 1]) : this.sceneStart).getTime()));
 
     const out = [];
     for (const prev of chain) {
@@ -69,7 +77,9 @@ export class Engine {
       let minutes = 0; // 그 씬 안에서 흐른 시간(질문 하나에 1분으로 어림) → 구분선 "now"가 조금씩 뒤로 간다
       for (const step of [...(prev.history || []), ...(prev.steps || [])]) {
         if (step.type === 'user' && step.sendDisabled) continue; // 보내지 못한 질문은 대화에 남지 않는다
-        out.push({ step, base, now: new Date(base.getTime() + minutes * 60e3), chained: true });
+        // 그 씬 안에서 흐른 시간이 다음 씬의 시각을 넘지 않게 한다
+        const at = Math.min(base.getTime() + minutes * 60e3, ends.get(prev) - 60e3);
+        out.push({ step, base, now: new Date(Math.max(at, base.getTime())), chained: true });
         if (step.type === 'user') minutes++;
       }
     }
