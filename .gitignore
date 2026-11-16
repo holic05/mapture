@@ -1,0 +1,17 @@
+# 참고 자료 (배포 제외)
+readme/
+
+# Windows에서 복사할 때 생기는 메타데이터 파일
+*:Zone.Identifier
+*Zone.Identifier
+
+# Claude Code 로컬 설정
+.claude/
+
+# 확인 스크립트가 만드는 스크린샷
+tools/shots/
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.vscode/

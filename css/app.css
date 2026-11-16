@@ -1,0 +1,457 @@
+/* ===== Design tokens (mockups 기준) ===== */
+:root {
+  --accent: #0F7B6C;
+  --accent-dark: #0A5A4F;
+  --accent-soft: #EAF6F3;
+  --ink: #1A1D1C;
+  --muted: #5B6360;
+  --line: #E3E7E5;
+  --bubble: #F1F3F2;
+  --divider: #D3D9D6;
+  --down: #B5430F;
+  --up: #1F5FBF;
+  --avatar: #DDE7E4;
+  --bg: #FFFFFF;
+
+  --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --text-scale: 1; /* 씬의 textScale (S#10은 1.3) */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); }
+
+/* ===== 앱 프레임 =====
+   높이는 "실제로 보이는 영역"을 따른다. 키보드가 올라오면 --vvh(js/app.js가 visualViewport로 갱신)가
+   줄어들어 입력창이 키보드 바로 위에 붙고, 메시지 목록만 줄어든다. */
+#app {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--vvh, 100dvh);
+  max-width: 480px; /* 모바일 전용. PC 브라우저에서 너무 넓어지지 않게만 제한 */
+  margin: 0 auto;
+  overflow: hidden;
+  /* 버튼·UI 글자는 길게 눌러도 선택되지 않게 (촬영 중 실수 방지) */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ===== 상단 바 ===== */
+.topbar {
+  flex: none;
+  height: calc(64px + env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex: none;
+  touch-action: manipulation;
+}
+
+.profile-btn {
+  background: var(--avatar);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.title-btn {
+  height: 44px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.title-btn .plan { font-weight: 500; color: var(--muted); }
+
+/* ===== 메시지 영역 ===== */
+.chat-main {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 빈 상태 (Main.dc.html) */
+.empty {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 8px 16px 12px;
+  overflow: hidden;
+}
+.empty[hidden] { display: none; }
+.empty-hero {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
+}
+/* 마스코트는 남는 높이에 맞춰 줄어든다 (키보드 + 여러 줄 입력으로 공간이 좁아질 때) */
+.empty-hero .mascot { flex: 0 1 128px; min-height: 0; width: auto; height: auto; max-width: 128px; aspect-ratio: 1; }
+.empty-hero h1, .empty-foot { flex: none; }
+.empty-hero h1 {
+  margin: 0;
+  font-size: clamp(22px, 6.7vw, 26px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.empty-foot {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 스크롤되는 메시지 목록. 내용이 적을 때는 아래쪽에 붙는다(margin-top:auto). */
+.scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scroller::-webkit-scrollbar { display: none; }
+.scroller[hidden] { display: none; }
+.messages {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 16px 12px;
+}
+
+.msg.live { animation: msg-in .22s ease-out both; }
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+/* 시간 구분선 */
+.time-divider {
+  margin: 4px 0;
+  text-align: center;
+  font-size: calc(12px * var(--text-scale));
+  color: var(--muted);
+}
+
+/* 사용자 말풍선 */
+.bubble-user {
+  align-self: flex-end;
+  max-width: 80%;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 20px 20px 6px 20px;
+  padding: 11px 15px;
+  font-size: calc(15px * var(--text-scale));
+  line-height: 1.45;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+.bubble-user.voice { display: flex; gap: 8px; }
+.bubble-user.voice svg { flex: none; margin-top: 3px; }
+.bubble-user.voice span { min-width: 0; }
+
+/* 맵쳐 말풍선 */
+.bubble-mapture {
+  align-self: flex-start;
+  width: 92%;
+  background: var(--bubble);
+  border-radius: 20px 20px 20px 6px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-wrap: break-word;
+}
+.bubble-mapture.progress { gap: 2px; }
+.bubble-mapture p { margin: 0; }
+
+.headline { display: flex; flex-direction: column; gap: 2px; }
+.headline-label {
+  font-size: calc(12px * var(--text-scale));
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.headline-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 10px; }
+.headline-value {
+  font-size: calc(34px * var(--text-scale));
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+/* 큰 숫자는 좁은 폰(360px)에서 말풍선을 넘지 않게 화면 폭에 맞춰 줄인다 */
+.headline.huge .headline-value { font-size: min(calc(64px * var(--text-scale)), 16.4vw); }
+.progress .headline-value { font-size: calc(30px * var(--text-scale)); }
+.headline-delta { font-size: calc(15px * var(--text-scale)); font-weight: 600; }
+.headline-delta.down { color: var(--down); }
+.headline-delta.up { color: var(--up); }
+
+.rule { height: 1px; background: var(--divider); flex: none; }
+
+.body-text { font-size: calc(15px * var(--text-scale)); line-height: 1.5; }
+.list-title { font-size: calc(14px * var(--text-scale)); font-weight: 600; }
+.bubble-mapture ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: calc(15px * var(--text-scale));
+  line-height: 1.6;
+}
+.disclaimer { font-size: calc(12px * var(--text-scale)); line-height: 1.45; color: var(--muted); }
+
+.bubble-btn {
+  align-self: flex-start;
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  font-size: calc(14px * var(--text-scale));
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: 22px;
+}
+.bubble-btn:active { background: var(--accent-dark); }
+.report-link {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--accent);
+  font-size: calc(14px * var(--text-scale));
+  font-weight: 600;
+}
+
+/* 로딩 말풍선 */
+.bubble-loading {
+  align-self: flex-start;
+  max-width: 92%;
+  background: var(--bubble);
+  border-radius: 20px 20px 20px 6px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bubble-loading.with-bar { min-width: min(260px, 80%); padding-bottom: 14px; }
+.loading-row { display: flex; align-items: center; gap: 10px; }
+.loading-row span { font-size: calc(14px * var(--text-scale)); color: var(--muted); }
+.spin-mascot { flex: none; overflow: visible; }
+.spin-ring { transform-origin: 60px 60px; animation: ring-spin 1.6s linear infinite; }
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+.loading-bar { height: 3px; border-radius: 2px; background: var(--divider); overflow: hidden; }
+.loading-bar i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: bar-fill linear both;
+}
+@keyframes bar-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ===== 입력창 ===== */
+.composer-wrap {
+  flex: none;
+  padding: 8px 12px 28px;
+  transition: padding-bottom .15s;
+}
+.composer {
+  display: flex;
+  align-items: flex-end; /* 입력이 여러 줄로 늘어나도 버튼은 아래 줄에 고정 */
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 5px;
+  background: var(--bg);
+}
+.composer .round {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex: none;
+  touch-action: manipulation;
+}
+.composer .attach { background: var(--bubble); }
+.composer .send { background: var(--accent); }
+.composer textarea {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  max-height: 132px; /* 약 5줄, 넘으면 입력창 안에서 스크롤 */
+  margin: 0;
+  padding: 11px 2px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font-size: 16px; /* 16px 미만이면 모바일에서 포커스 시 자동 확대됨 */
+  line-height: 22px;
+  color: var(--ink);
+  user-select: text;
+  -webkit-user-select: text;
+  scrollbar-width: none;
+}
+.composer textarea::-webkit-scrollbar { display: none; }
+.composer textarea::placeholder { color: var(--muted); }
+
+/* ===== 키보드가 열렸을 때 (html.kb-open, js/app.js가 붙임) ===== */
+.kb-open .composer-wrap { padding-bottom: 8px; }
+.kb-open .empty-hero { gap: 12px; }
+.kb-open .empty-hero .mascot { flex-basis: 84px; }
+.kb-open .empty-hero h1 { font-size: 21px; }
+.kb-open .empty-foot { display: none; }
+@media (max-height: 460px) { .empty-foot { display: none; } }
+
+/* ===== 숨은 씬 메뉴 ===== */
+.sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(26, 29, 28, 0.35);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fade-in .15s ease-out both;
+}
+@keyframes fade-in { from { opacity: 0; } }
+.sheet {
+  max-height: 82%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  padding: 10px 0 calc(12px + env(safe-area-inset-bottom));
+  animation: sheet-up .2s ease-out both;
+}
+@keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
+.sheet-grip { width: 40px; height: 4px; border-radius: 2px; background: var(--divider); margin: 0 auto 8px; flex: none; }
+.sheet-title {
+  margin: 0;
+  padding: 6px 20px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex: none;
+}
+.sheet-list { overflow-y: auto; padding: 0 8px; }
+.sheet-item {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 15px;
+  color: var(--ink);
+}
+.sheet-item:active { background: var(--bubble); }
+.sheet-item.current { background: var(--accent-soft); font-weight: 600; }
+.sheet-item .sid {
+  flex: none;
+  min-width: 48px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+.sheet-item .meta { margin-left: auto; flex: none; font-size: 12px; font-weight: 400; color: var(--muted); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ===== 치명적 오류 표시 (현장에서 바로 보이게) ===== */
+.fatal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #B5430F;
+  color: #fff;
+  padding: 32px 20px;
+  font-size: 18px;
+  line-height: 1.4;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.fatal strong { display: block; font-size: 26px; margin-bottom: 12px; }
