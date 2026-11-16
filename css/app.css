@@ -512,8 +512,9 @@ a { color: var(--accent); }
   opacity: .75;
   transition: opacity .3s;
 }
-/* 알약 안의 초록 물결: 낮은 물결 세 겹이 서로 다른 속도·방향으로 천천히 흐르고, 각자 조금씩 오르내린다.
-   주기가 서로 맞지 않아(23초·17초·13초, 오르내림 5.3초·6.7초·8.1초) 같은 모양이 되풀이되어 보이지 않는다.
+/* 알약 안의 초록 물결: 낮은 물결 세 겹이 서로 다른 속도·방향으로 흐르고, 각자 다른 박자로 조금씩 오르내린다.
+   세 겹은 일부러 어긋나게 맞췄다: 흐르는 주기 12초·7.5초(반대 방향)·5초, 시작 위치도 제각각,
+   오르내림은 3.7초·5.9초·4.6초이고 가운데 겹은 반대로 움직인다. 그래서 같은 모양이 되풀이되어 보이지 않는다.
    살짝 흐리게 해서 물결의 경계가 그라데이션처럼 번진다. 알약 크기는 변하지 않고, 듣는 중이 아닐 때는 멈춘다. */
 .voice-pill svg {
   position: absolute;
@@ -522,18 +523,19 @@ a { color: var(--accent); }
   height: calc(100% + 10px);
   filter: blur(3.5px);
 }
-.voice-pill .wave { animation: pill-drift 23s linear infinite; will-change: transform; }
-.voice-pill .wave path { animation: pill-swell 5.3s ease-in-out infinite alternate; }
-.voice-pill .wave-2 { animation-duration: 17s; animation-direction: reverse; }
-.voice-pill .wave-2 path { animation-duration: 6.7s; animation-delay: -2.1s; }
-.voice-pill .wave-3 { animation-duration: 13s; }
-.voice-pill .wave-3 path { animation-duration: 8.1s; animation-delay: -4.4s; }
+.voice-pill .wave { animation: pill-drift 12s linear -2.3s infinite; will-change: transform; }
+.voice-pill .wave path { animation: pill-swell 3.7s ease-in-out infinite alternate; }
+.voice-pill .wave-2 { animation-duration: 7.5s; animation-delay: -5.1s; animation-direction: reverse; }
+.voice-pill .wave-2 path { animation-name: pill-swell-wide; animation-duration: 5.9s; animation-delay: -2.9s; animation-direction: alternate-reverse; }
+.voice-pill .wave-3 { animation-duration: 5s; animation-delay: -0.8s; }
+.voice-pill .wave-3 path { animation-duration: 4.6s; animation-delay: -1.7s; }
 .voice-pill .wave, .voice-pill .wave path { animation-play-state: paused; }
 .voice-panel.listening .voice-pill { opacity: 1; }
 .voice-panel.listening .voice-pill .wave,
 .voice-panel.listening .voice-pill .wave path { animation-play-state: running; }
 @keyframes pill-drift { from { transform: translateX(0); } to { transform: translateX(-150px); } }
 @keyframes pill-swell { from { transform: translateY(-1.6px); } to { transform: translateY(1.8px); } }
+@keyframes pill-swell-wide { from { transform: translateY(-2.6px); } to { transform: translateY(2.4px); } }
 
 /* ===== 채팅 위를 덮는 전체 화면 (다운로드·결제·리포트) ===== */
 .overlay {

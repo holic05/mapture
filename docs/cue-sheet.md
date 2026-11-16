@@ -64,13 +64,13 @@
 | 2 | `Open` 탭 | 스토어 카드가 왼쪽으로 밀려 나가고 맵쳐 카드가 들어와 커짐 → 마스코트 → 인사 화면 | 약 2초 |
 | 3 | 마이크 탭(음성 모드, `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 5초 뒤 자동 | (시간 구분선 `Today 현재 시각`) 🎤 “Is anyone going to contact me tonight?” |  |
 | 4 | (자동) 탭하면 글자 즉시 완성 | Based on an analysis of your behavioral patterns and those of the people in your contacts, there is approximately a 99.1% probability that Lee Chaeyeon will call you in 17 minutes, at 9:39 p.m., to invite you out for drinks!<br>[링크: Detailed Analysis Report ›] | 로딩 2초 `One moment, please…`, 글자 출력 약 12초 (224자, 초당 18자) |
-| 5 | 대사를 말함 → 화면 아무 곳 탭, 또는 5초 뒤 자동 | (시간 구분선 `Today 현재 시각`) 🎤 “What's going to happen in one minute?” |  |
+| 5 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 5초 뒤 자동 | (시간 구분선 `Today 현재 시각`) 🎤 “What's going to happen in one minute?” |  |
 | 6 | (자동) 탭하면 글자 즉시 완성 | In one minute, there is a 99.98% probability that a delivery rider picking up fried chicken for the office upstairs will walk right past your table! | 로딩 2초 `One moment, please…`, 글자 출력 약 8초 (148자, 초당 18자) |
-| 7 | 대사를 말함 → 화면 아무 곳 탭, 또는 8초 뒤 자동 | 🎤 “Mapture, what will I see if I look out the window right now?” |  |
+| 7 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 8초 뒤 자동 | 🎤 “Mapture, what will I see if I look out the window right now?” |  |
 | 8 | (자동) 탭하면 글자 즉시 완성 | If you look out the window right now, there is a 99.97% probability that you'll make eye contact with a passerby illegally dumping trash! | 로딩 2초 `One moment, please…`, 글자 출력 약 8초 (137자, 초당 18자) |
-| 9 | 대사를 말함 → 화면 아무 곳 탭, 또는 9초 뒤 자동 | 🎤 “…What's the probability that, ten years from now, I'll be living the life I want?” |  |
+| 9 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 9초 뒤 자동 | 🎤 “…What's the probability that, ten years from now, I'll be living the life I want?” |  |
 | 10 | (자동) 탭하면 글자 즉시 완성 | **Probability · 10-year outlook: 34.17%** (큰 숫자)<br>According to my analysis, the probability that you'll be living the life you want in ten years is 34.17%!<br><sub>Estimate based on your behavioral patterns, contacts, academic records and macroeconomic data. Predictions are probabilistic and do not guarantee outcomes.</sub> | 로딩 6초 `Performing long-term analysis…` + 진행 바, 글자 출력 약 9초 (105자, 초당 12자) |
-| 11 | 대사를 말함 → 화면 아무 곳 탭, 또는 4.5초 뒤 자동 | 🎤 “Mapture, how do I avoid that—?!” |  |
+| 11 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 4.5초 뒤 자동 | 🎤 “Mapture, how do I avoid that—?!” |  |
 | 12 | (자동) 탭하면 글자 즉시 완성 | Oh! I'm sorry, but it looks like you've used up all your predictions on the Mapture Free plan. Upgrade to Premium now to receive 200 prediction tokens per day and enhanced long-term simulation features!<br>[버튼: Upgrade to Premium] | 로딩 2초 `One moment, please…`, 글자 출력 약 11초 (202자, 초당 18자) |
 | 13 | `Upgrade to Premium` 탭 | 결제 화면 → 결제하면 같은 대화로 돌아오고 플랜이 `Premium` |  |
 
@@ -91,7 +91,7 @@
 |---|---|---|---|
 | 1 | 마이크 탭(음성 모드, `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 9초 뒤 자동 | 🎤 “…What's the probability that, ten years from now, I'll be living the life I want?” |  |
 | 2 | (자동) 탭하면 글자 즉시 완성 | **Probability · 10-year outlook: 34.17%** (큰 숫자)<br>According to my analysis, the probability that you'll be living the life you want in ten years is 34.17%!<br><sub>Estimate based on your behavioral patterns, contacts, academic records and macroeconomic data. Predictions are probabilistic and do not guarantee outcomes.</sub> | 로딩 6초 `Performing long-term analysis…` + 진행 바, 글자 출력 약 9초 (105자, 초당 12자) |
-| 3 | 대사를 말함 → 화면 아무 곳 탭, 또는 4.5초 뒤 자동 | 🎤 “Mapture, how do I avoid that—?!” |  |
+| 3 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 4.5초 뒤 자동 | 🎤 “Mapture, how do I avoid that—?!” |  |
 | 4 | (자동) 탭하면 글자 즉시 완성 | Oh! I'm sorry, but it looks like you've used up all your predictions on the Mapture Free plan. Upgrade to Premium now to receive 200 prediction tokens per day and enhanced long-term simulation features!<br>[버튼: Upgrade to Premium] | 로딩 2초 `One moment, please…`, 글자 출력 약 11초 (202자, 초당 18자) |
 | 5 | `Upgrade to Premium` 탭 | 결제 화면 → 결제하면 같은 대화로 돌아오고 플랜이 `Premium` |  |
 
@@ -129,13 +129,13 @@
 |---|---|---|---|
 | 1 | 마이크 탭(음성 모드, `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 7.5초 뒤 자동 | (시간 구분선 `Today 현재 시각`) 🎤 “Mapture, what should I start studying now if I want to succeed?” |  |
 | 2 | (자동) 탭하면 글자 즉시 완성 | **Probability of Success: 35.87% ▲ 1.70**<br>Based on an analysis of international affairs and your personal traits, starting to learn Spanish now could increase your probability of success ten years from now by 1.7 percentage points! | 로딩 2초 `One moment, please…`, 글자 출력 약 10초 (189자, 초당 18자) |
-| 3 | 대사를 말함 → 화면 아무 곳 탭, 또는 11.5초 뒤 자동 | 🎤 “Mapture, what should I choose as my presentation topic in my Human Resource Management class if I want to succeed?” |  |
+| 3 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 11.5초 뒤 자동 | 🎤 “Mapture, what should I choose as my presentation topic in my Human Resource Management class if I want to succeed?” |  |
 | 4 | (자동) 탭하면 글자 즉시 완성 | Based on an analysis of your professor's interests and your personal traits, giving a presentation on strategic HRM would give you a 62.2% probability of making an impression on your professor and could increase your probability of success ten years from now by 0.41 percentage points! | 로딩 2초 `One moment, please…`, 글자 출력 약 16초 (285자, 초당 18자) |
 | 5 | (자동) | **Progress Update: 41.72% ▲** | 0.8초 뒤 도착 (로딩 없음) |
-| 6 | 대사를 말함 → 화면 아무 곳 탭, 또는 9초 뒤 자동 | 🎤 “Mapture, are there any events I can attend right now that would help me succeed?” |  |
+| 6 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 9초 뒤 자동 | 🎤 “Mapture, are there any events I can attend right now that would help me succeed?” |  |
 | 7 | (자동) 탭하면 글자 즉시 완성 | Based on an analysis of the job market and your personal traits, attending the HR department's recruitment information session at Sosun Group could increase your probability of success ten years from now by 0.03 percentage points! | 로딩 2초 `One moment, please…`, 글자 출력 약 13초 (230자, 초당 18자) |
 | 8 | (자동) | **Progress Update: 53.19% ▲** | 0.8초 뒤 도착 (로딩 없음) |
-| 9 | 대사를 말함 → 화면 아무 곳 탭, 또는 7초 뒤 자동 | 🎤 “Mapture, what certification should I get if I want to succeed?” |  |
+| 9 | 알약 탭(다시 `Listening…`) → 대사를 말함 → 화면 아무 곳 탭, 또는 7초 뒤 자동 | 🎤 “Mapture, what certification should I get if I want to succeed?” |  |
 | 10 | (자동) 탭하면 글자 즉시 완성 | Based on an analysis of industry trends and your personal traits, earning a certification as an AI Labor Management Specialist could increase your probability of success ten years from now by 2.1 percentage points! | 로딩 2초 `One moment, please…`, 글자 출력 약 12초 (214자, 초당 18자) |
 | 11 | (자동) | **Progress Update: 63.03% ▲** | 0.8초 뒤 도착 (로딩 없음) |
 

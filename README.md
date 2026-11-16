@@ -63,7 +63,7 @@ python3 -m http.server 8000
 4. 확인할 것
    - DevTools → **Application** 탭 → **Manifest**: 이름·아이콘이 보이고 오류가 없는지
    - **Application → Service workers**: `sw.js`가 *activated and is running*인지
-   - **Application → Cache storage**: `mapture-v8`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
+   - **Application → Cache storage**: `mapture-v9`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
    - **Network** 탭에서 *Offline* 체크 후 새로고침 → 그래도 열리는지
 
 > 개발 중에는 **Application → Service workers → "Update on reload"**를 체크해 두면
@@ -107,7 +107,7 @@ python3 -m http.server 8000
 | 고친 것 | 할 일 |
 |---|---|
 | `scenes.json`만 | 그냥 push. 앱을 다시 열면 반영됩니다 (scenes.json은 항상 네트워크 먼저 받아옴). |
-| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v8'` → `'v9'`) push. |
+| html / css / js / 아이콘 | `sw.js` 맨 위의 `CACHE_VERSION`을 올리고(`'v9'` → `'v10'`) push. |
 
 `CACHE_VERSION`을 올린 뒤 폰에서:
 
@@ -135,8 +135,10 @@ python3 -m http.server 8000
   - 키보드가 **한글이든 영어든** 상관없습니다. 키를 한 번 누르면 한 글자가 써집니다.
 - **음성 씬:** 마이크 버튼을 탭하면 음성 모드(아래쪽이 초록빛으로 번지고 `Listening…`)가 됩니다.
   그 상태에서 **화면 아무 곳이나 한 번 더 탭**하면 질문이 올라가고 답변이 이어집니다.
-  음성 모드는 다음 질문을 위해 계속 켜져 있고, X를 누르면 일반 입력창으로 돌아갑니다.
   `scenes.json`에서 그 질문에 `autoSubmit`(초)을 적어 두면 탭하지 않아도 그 시간 뒤에 저절로 올라갑니다.
+  - 질문이 올라간 뒤에는 음성 모드가 **대기 상태**(알약이 멈추고 `Listening…`이 사라짐)가 됩니다.
+    다음 질문은 **알약을 탭**해야 다시 듣기 시작합니다. 그 뒤는 같습니다 (탭하거나 `autoSubmit` 시간 뒤 올라감).
+  - X를 누르면 일반 입력창으로 돌아갑니다.
 - **답변 출력 중** 말풍선을 탭하면 남은 글자가 즉시 전부 표시됩니다.
 - **S#4:** 스토어 화면 → `Download`(3초, `downloadSeconds`로 조절) → `Open` → 스토어 카드가 왼쪽으로 밀려 나가고 맵쳐 카드가 들어와 커짐 → 마스코트 → 인사 화면. 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
 - **결제:** 요금 카드를 탭해 고르고 `Subscribe for …` → 완료 화면 → `Start predicting`. 이후 상단 플랜이 `Premium`으로 바뀝니다.
@@ -176,8 +178,9 @@ Android 뒤로 가기로 앱이 닫히는 것, 번역 제안, 자동 다크 모�
 | 음성 질문 | `{"type":"user","input":"voice","text":"...","autoSubmit":3}` |
 | 맵쳐 답변 | `{"type":"mapture", ...}` 아래 항목을 필요한 것만 |
 
-음성 질문의 `autoSubmit`(초, 생략 가능): 음성 모드에서 `Listening…`이 뜬 뒤 그 시간이 지나면 질문이 저절로 올라갑니다.
-그 전에 탭하면 즉시 올라갑니다. 값이 없으면 탭으로만 올라갑니다. (음성 모드에 들어가는 마이크 탭은 항상 필요)
+음성 질문의 `autoSubmit`(초, 생략 가능): `Listening…`이 뜬 뒤 그 시간이 지나면 질문이 저절로 올라갑니다.
+그 전에 탭하면 즉시 올라갑니다. 값이 없으면 탭으로만 올라갑니다.
+`Listening…`은 첫 질문에서는 마이크를 탭할 때, 그다음 질문부터는 알약을 탭할 때 시작됩니다 (저절로 다시 듣지 않음).
 
 맵쳐 답변 항목:
 

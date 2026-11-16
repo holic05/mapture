@@ -163,7 +163,7 @@ def scene_section(scene, by_id):
         if st["type"] == "user":
             if st.get("input") == "voice":
                 auto = st.get("autoSubmit")
-                enter = "" if voice_on else "마이크 탭(음성 모드, `Listening…`) → "
+                enter = "알약 탭(다시 `Listening…`) → " if voice_on else "마이크 탭(음성 모드, `Listening…`) → "
                 send = f"화면 아무 곳 탭, 또는 {auto:g}초 뒤 자동" if auto else "화면 아무 곳 탭"
                 action = f"{enter}대사를 말함 → {send}"
                 voice_on = True

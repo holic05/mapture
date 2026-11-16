@@ -89,6 +89,7 @@ export function createChat(root, hooks = {}) {
   let scene = null;
   let loadingEl = null;
   let voiceOn = false;
+  let listening = false; // 음성 모드 안에서 '듣는 중'인지 (질문이 올라가면 꺼지고, 알약을 누르면 다시 켜진다)
   let autoTimer = 0; // 음성 질문 자동 올리기(autoSubmit) 타이머
   /** 지금 기다리는 사용자 단계. { step, n, resolve } 또는 null */
   let pending = null;
@@ -294,6 +295,7 @@ export function createChat(root, hooks = {}) {
   function finishPending() {
     const p = pending;
     pending = null;
+    listening = false; // 질문이 올라가면 대기 상태로
     resetKeyState();
     renderVoice();
     renderInput();
@@ -305,10 +307,14 @@ export function createChat(root, hooks = {}) {
   const voicePending = () => !!pending && pending.step.input === 'voice';
 
   // ---------- 음성 모드 (S04-Voice 목업) ----------
-  // 실제 음성 인식은 없다. 마이크 탭 → 음성 모드, 화면 아무 곳이나 한 번 더 탭 → 질문이 올라간다.
-  // 음성 모드는 다음 음성 질문을 위해 유지되고, X를 누르면 일반 입력창으로 돌아간다.
+  // 실제 음성 인식은 없다. 흐름:
+  //   마이크 탭 → 음성 모드, 듣는 중(Listening…) → 화면 아무 곳 탭 또는 autoSubmit 시간 뒤 → 질문이 올라간다
+  //   → 대기 (음성 모드는 유지, 알약은 멈춤) → 알약 탭 → 다시 듣는 중 → 탭 또는 autoSubmit → 질문이 올라간다 …
+  // 질문이 한 번 올라간 뒤에는 저절로 다시 듣지 않는다. 다음 질문은 알약(또는 왼쪽 마이크 버튼)을 눌러야 시작된다.
+  // X를 누르면 일반 입력창으로 돌아간다.
   function setVoice(on) {
     voiceOn = on;
+    listening = on; // 마이크로 들어오면 바로 듣는 중
     screen.classList.toggle('voice-on', on);
     refs.voice.hidden = !on;
     if (on) input.blur();
@@ -316,24 +322,25 @@ export function createChat(root, hooks = {}) {
   }
 
   function renderVoice() {
-    const listening = voicePending();
-    refs.voice.classList.toggle('listening', listening);
-    refs.voiceStatus.textContent = listening ? 'Listening…' : '\u00A0';
+    refs.voice.classList.toggle('listening', voiceOn && listening);
+    // 다음 음성 질문 차례인데 아직 알약을 누르지 않은 상태 (화면 표시는 같고, 확인 스크립트가 본다)
+    refs.voice.classList.toggle('waiting', voiceOn && !listening && voicePending());
+    refs.voiceStatus.textContent = voiceOn && listening ? 'Listening…' : '\u00A0';
     armAutoSubmit();
   }
 
-  // 음성 단계에 autoSubmit(초)이 있으면, 음성 모드에서 듣기 시작한 뒤 그 시간이 지나면 질문이 저절로 올라간다.
-  // 그 전에 탭하면 즉시 올라가고, 값이 없으면 탭으로만 올라간다.
+  // 음성 단계에 autoSubmit(초)이 있으면, 듣는 중이 된 뒤 그 시간이 지나면 질문이 저절로 올라간다.
+  // 그 전에 탭하면 즉시 올라가고, 값이 없으면 탭으로만 올라간다. 대기 상태에서는 세지 않는다.
   function armAutoSubmit() {
     clearTimeout(autoTimer);
     autoTimer = 0;
-    if (!voiceOn || !voicePending()) return;
+    if (!voiceOn || !listening || !voicePending()) return;
     const seconds = Number(pending.step.autoSubmit);
     if (!(seconds > 0)) return;
     const waitingFor = pending;
     autoTimer = setTimeout(() => {
       autoTimer = 0;
-      if (pending === waitingFor && voiceOn) finishPending();
+      if (pending === waitingFor && voiceOn && listening) finishPending();
     }, seconds * 1000);
   }
 
@@ -344,8 +351,14 @@ export function createChat(root, hooks = {}) {
       if (voicePending()) setVoice(true);
       return;
     }
-    if (!voiceOn || !voicePending()) return;
-    // 상단 바와 말풍선 안의 버튼·링크는 제 기능을 한다. 그 밖의 어디를 탭해도 질문이 올라간다.
+    if (!voiceOn) return;
+    if (!listening) {
+      // 대기 중: 알약(또는 왼쪽 마이크 버튼)을 눌러야 다시 듣기 시작한다. 다른 곳을 탭해도 아무 일 없다.
+      if (target.closest('.voice-pill, .voice-btn')) { listening = true; renderVoice(); }
+      return;
+    }
+    if (!voicePending()) return;
+    // 듣는 중: 상단 바와 말풍선 안의 버튼·링크는 제 기능을 한다. 그 밖의 어디를 탭해도 질문이 올라간다.
     if (target.closest('.topbar, .bubble-btn, .report-link')) return;
     finishPending();
   });

@@ -332,7 +332,22 @@ def t_voice(run):
           and page.inner_text(".voice-status") == "Listening…" and page.locator(".bubble-user").count() == 0)
     run.shot(page, "voice-listening-360")
     for i in range(answers):
-        # 음성 모드에서 아무 곳이나 탭 → 질문이 올라간다 (번갈아 알약 / 채팅 영역)
+        if i > 0:
+            # 질문이 올라간 뒤에는 대기 상태: 다른 곳을 탭해도 올라가지 않고, 알약을 눌러야 다시 듣는다
+            page.wait_for_function("document.querySelector('.voice-panel').classList.contains('waiting')", timeout=20000, polling=100)
+            if i == 1:
+                page.wait_for_timeout(1200)
+                page.tap(".chat-main", force=True, position={"x": 30, "y": 30})
+                page.wait_for_timeout(300)
+                check("standby: no Listening label, tapping elsewhere does not send",
+                      page.inner_text(".voice-status").strip() == "" and page.locator(".bubble-user").count() == i)
+                run.shot(page, "voice-standby-360")
+            page.tap(".voice-pill", force=True)
+            page.wait_for_timeout(200)
+            if i == 1:
+                check("tapping the pill resumes listening without sending",
+                      page.inner_text(".voice-status") == "Listening…" and page.locator(".bubble-user").count() == i)
+        # 듣는 중에 아무 곳이나 탭 → 질문이 올라간다 (번갈아 알약 / 채팅 영역)
         page.tap(".voice-pill" if i % 2 == 0 else ".chat-main", force=True)  # 알약은 계속 움직이므로 force
         page.wait_for_selector(f".bubble-user >> nth={i}")
         if i == 0:
@@ -357,9 +372,6 @@ def t_voice(run):
               return v.right <= b.right - 12; }""")
             check("S04 huge 34.17% fits inside the bubble at 360px", fits)
             run.shot(page, "s04-longterm-360")
-        # 타이핑이 끝나 다음 음성 단계가 될 때까지
-        if i < answers - 1:
-            page.wait_for_function("document.querySelector('.voice-panel').classList.contains('listening')", timeout=20000)
     check("S04 voice bubbles carry the mic icon", page.locator(".bubble-user.voice svg").count() == answers)
     check("S04 two time dividers", page.locator(".time-divider").count() == 2, page.locator(".time-divider").all_inner_texts())
 
@@ -454,18 +466,33 @@ def t_autosubmit(run):
     run.shot(page, "voice-pill-flow")
     page.wait_for_selector(".bubble-user", timeout=1500)
     check("autoSubmit: question goes up by itself after 1.5s", page.locator(".bubble-user.voice").count() == 1)
-    # 두 번째 질문: 음성 모드가 유지된 채 차례가 오면 그때부터 다시 센다. 그 전에 탭하면 즉시.
-    page.wait_for_function("document.querySelector('.voice-panel').classList.contains('listening')", timeout=30000, polling=100)
+    # 두 번째 질문: 대기 상태에서는 autoSubmit이 세지 않는다. 알약을 눌러야 다시 듣고, 그때부터 센다.
+    waiting = "document.querySelector('.voice-panel').classList.contains('waiting')"
+    page.wait_for_function(waiting, timeout=30000, polling=100)
+    page.wait_for_timeout(2300)
+    check("standby: autoSubmit does not fire until the pill is tapped", page.locator(".bubble-user").count() == 1)
+    page.tap(".voice-pill", force=True)
+    page.wait_for_timeout(700)
+    check("pill tap resumes listening; not sent yet at 0.7s",
+          page.inner_text(".voice-status") == "Listening…" and page.locator(".bubble-user").count() == 1)
+    page.wait_for_selector(".bubble-user >> nth=1", timeout=1500)
+    check("...then autoSubmit sends it 1.5s after the pill tap", page.locator(".bubble-user").count() == 2)
+    # 세 번째 질문: 알약으로 다시 듣기 → 시간 전에 탭하면 즉시
+    page.wait_for_function(waiting, timeout=40000, polling=100)
     page.tap(".voice-pill", force=True)
     page.wait_for_timeout(200)
-    check("tap before the timer sends immediately", page.locator(".bubble-user").count() == 2)
+    page.tap(".voice-pill", force=True)
+    page.wait_for_timeout(200)
+    check("tap before the timer sends immediately", page.locator(".bubble-user").count() == 3)
     page.wait_for_timeout(2000)
-    check("...and the cancelled timer does not fire later", page.locator(".bubble-user").count() == 2)
-    # X로 나가면 자동 올리기도 취소
-    page.wait_for_function("document.querySelector('.voice-panel').classList.contains('listening')", timeout=40000, polling=100)
+    check("...and the cancelled timer does not fire later", page.locator(".bubble-user").count() == 3)
+    # 네 번째 질문: 다시 듣기 시작한 뒤 X로 나가면 자동 올리기도 취소
+    page.wait_for_function(waiting, timeout=40000, polling=100)
+    page.tap(".voice-pill", force=True)
+    page.wait_for_timeout(200)
     page.tap(".voice-x")
     page.wait_for_timeout(2200)
-    check("leaving voice mode cancels autoSubmit", page.locator(".bubble-user").count() == 2)
+    check("leaving voice mode cancels autoSubmit", page.locator(".bubble-user").count() == 3)
     check("no page errors", not page.errors, page.errors)
     page.context.close()
 
