@@ -447,8 +447,8 @@ def t_autosubmit(run):
     page.wait_for_timeout(900)
     check("autoSubmit: not yet sent at 0.9s", page.locator(".bubble-user").count() == 0)
     moving = page.evaluate("""async () => { const el = document.querySelector('.voice-pill');
-      const x = () => new DOMMatrix(getComputedStyle(el, '::before').transform).m41, box = () => el.getBoundingClientRect().width;
-      const a = [x(), box()]; await new Promise(r => setTimeout(r, 250)); const b = [x(), box()];
+      const x = () => new DOMMatrix(getComputedStyle(el.querySelector('.wave-3')).transform).m41, box = () => el.getBoundingClientRect().width;
+      const a = [x(), box()]; await new Promise(r => setTimeout(r, 600)); const b = [x(), box()];
       return a[0] !== b[0] && a[1] === b[1]; }""")
     check("pill: gradient flows, size stays the same", moving)
     run.shot(page, "voice-pill-flow")

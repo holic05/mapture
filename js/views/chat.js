@@ -21,6 +21,10 @@ const ICON = {
     <path d="M47 71q13 11 26 0" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/></svg>`,
 };
 
+// 음성 모드 알약 안의 물결: 높이가 낮고 모양이 서로 다른 세 겹이 각자 다른 속도로 천천히 흐른다.
+// 각 겹은 알약 폭(150)을 한 주기로 하는 불규칙한 곡선 두 주기분이라, 한 주기만큼 옮기면 끊김 없이 이어진다.
+const PILL_WAVES = '<svg viewBox="0 0 150 72" preserveAspectRatio="none" aria-hidden="true"><g class="wave wave-1"><path d="M0,31.3 L5,31.4 L10,31.4 L15,31.5 L20,31.6 L25,31.7 L30,31.7 L35,31.5 L40,31.2 L45,31.0 L50,30.8 L55,30.8 L60,30.9 L65,31.1 L70,31.1 L75,30.9 L80,30.4 L85,29.5 L90,28.5 L95,27.4 L100,26.5 L105,26.1 L110,26.1 L115,26.7 L120,27.6 L125,28.7 L130,29.7 L135,30.5 L140,31.0 L145,31.3 L150,31.3 L155,31.4 L160,31.4 L165,31.5 L170,31.6 L175,31.7 L180,31.7 L185,31.5 L190,31.2 L195,31.0 L200,30.8 L205,30.8 L210,30.9 L215,31.1 L220,31.1 L225,30.9 L230,30.4 L235,29.5 L240,28.5 L245,27.4 L250,26.5 L255,26.1 L260,26.1 L265,26.7 L270,27.6 L275,28.7 L280,29.7 L285,30.5 L290,31.0 L295,31.3 L300,31.3 L300,80 L0,80Z" fill="#9ADBCF" fill-opacity="0.75"/></g><g class="wave wave-2"><path d="M0,41.1 L5,41.3 L10,41.0 L15,40.3 L20,39.4 L25,38.3 L30,37.4 L35,36.8 L40,36.5 L45,36.4 L50,36.4 L55,36.6 L60,36.8 L65,37.0 L70,37.4 L75,38.0 L80,38.7 L85,39.6 L90,40.4 L95,41.1 L100,41.3 L105,41.2 L110,40.7 L115,39.9 L120,39.2 L125,38.8 L130,38.7 L135,39.1 L140,39.8 L145,40.5 L150,41.1 L155,41.3 L160,41.0 L165,40.3 L170,39.4 L175,38.3 L180,37.4 L185,36.8 L190,36.5 L195,36.4 L200,36.4 L205,36.6 L210,36.8 L215,37.0 L220,37.4 L225,38.0 L230,38.7 L235,39.6 L240,40.4 L245,41.1 L250,41.3 L255,41.2 L260,40.7 L265,39.9 L270,39.2 L275,38.8 L280,38.7 L285,39.1 L290,39.8 L295,40.5 L300,41.1 L300,80 L0,80Z" fill="#4FB3A3" fill-opacity="0.7"/></g><g class="wave wave-3"><path d="M0,47.9 L5,47.0 L10,46.1 L15,45.6 L20,45.5 L25,45.9 L30,46.9 L35,48.1 L40,49.3 L45,50.3 L50,50.9 L55,51.0 L60,50.9 L65,50.7 L70,50.5 L75,50.4 L80,50.5 L85,50.6 L90,50.7 L95,50.5 L100,50.2 L105,49.7 L110,49.2 L115,48.8 L120,48.7 L125,48.7 L130,48.9 L135,49.1 L140,49.0 L145,48.6 L150,47.9 L155,47.0 L160,46.1 L165,45.6 L170,45.5 L175,45.9 L180,46.9 L185,48.1 L190,49.3 L195,50.3 L200,50.9 L205,51.0 L210,50.9 L215,50.7 L220,50.5 L225,50.4 L230,50.5 L235,50.6 L240,50.7 L245,50.5 L250,50.2 L255,49.7 L260,49.2 L265,48.8 L270,48.7 L275,48.7 L280,48.9 L285,49.1 L290,49.0 L295,48.6 L300,47.9 L300,80 L0,80Z" fill="#0F7B6C" fill-opacity="0.9"/></g></svg>';
+
 const DEFAULT_TYPING_SPEED = 18; // 초당 글자 수
 const INPUT_MAX_HEIGHT = 132;
 
@@ -72,7 +76,7 @@ export function createChat(root, hooks = {}) {
       <p class="voice-status" data-ref="voiceStatus">Listening…</p>
       <div class="voice-row">
         <button type="button" class="voice-btn" aria-label="Microphone">${ICON.micBig}</button>
-        <div class="voice-pill" aria-hidden="true"></div>
+        <div class="voice-pill" aria-hidden="true">${PILL_WAVES}</div>
         <button type="button" class="voice-btn voice-x" data-ref="voiceX" aria-label="End voice mode">${ICON.close}</button>
       </div>
     </div>

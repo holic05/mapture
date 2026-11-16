@@ -512,36 +512,28 @@ a { color: var(--accent); }
   opacity: .75;
   transition: opacity .3s;
 }
-/* 알약 안의 초록 그라데이션: 가로로 이어지는 무늬 두 겹이 서로 다른 속도로 흘러 물결처럼 보인다.
-   크기는 변하지 않는다. 듣는 중이 아닐 때는 멈춰 있다. */
-.voice-pill::before,
-.voice-pill::after {
-  content: "";
+/* 알약 안의 초록 물결: 낮은 물결 세 겹이 서로 다른 속도·방향으로 천천히 흐르고, 각자 조금씩 오르내린다.
+   주기가 서로 맞지 않아(23초·17초·13초, 오르내림 5.3초·6.7초·8.1초) 같은 모양이 되풀이되어 보이지 않는다.
+   살짝 흐리게 해서 물결의 경계가 그라데이션처럼 번진다. 알약 크기는 변하지 않고, 듣는 중이 아닐 때는 멈춘다. */
+.voice-pill svg {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 200%;
-  height: 100%;
-  animation: pill-flow 3.2s linear infinite;
-  animation-play-state: paused;
-  will-change: transform;
+  inset: -4px -6px -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 10px);
+  filter: blur(3.5px);
 }
-/* 아래쪽 초록 띠: 진한 초록과 연한 초록이 번갈아 흐른다 */
-.voice-pill::before {
-  background: linear-gradient(90deg, #0F7B6C 0%, #7FCFC1 25%, #0F7B6C 50%, #7FCFC1 75%, #0F7B6C 100%);
-}
-/* 위쪽 흰 부분: 경계가 물결 모양으로 오르내리며 반대 방향으로 천천히 흐른다 */
-.voice-pill::after {
-  background:
-    radial-gradient(ellipse 50% 46% at 50% 22%, #FFFFFF 0%, #FFFFFF 55%, rgba(255, 255, 255, 0) 100%) 0 0 / 25% 100% repeat-x,
-    linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 30%, rgba(255, 255, 255, 0.55) 55%, rgba(255, 255, 255, 0) 90%);
-  animation-duration: 5.6s;
-  animation-direction: reverse;
-}
+.voice-pill .wave { animation: pill-drift 23s linear infinite; will-change: transform; }
+.voice-pill .wave path { animation: pill-swell 5.3s ease-in-out infinite alternate; }
+.voice-pill .wave-2 { animation-duration: 17s; animation-direction: reverse; }
+.voice-pill .wave-2 path { animation-duration: 6.7s; animation-delay: -2.1s; }
+.voice-pill .wave-3 { animation-duration: 13s; }
+.voice-pill .wave-3 path { animation-duration: 8.1s; animation-delay: -4.4s; }
+.voice-pill .wave, .voice-pill .wave path { animation-play-state: paused; }
 .voice-panel.listening .voice-pill { opacity: 1; }
-.voice-panel.listening .voice-pill::before,
-.voice-panel.listening .voice-pill::after { animation-play-state: running; }
-@keyframes pill-flow { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.voice-panel.listening .voice-pill .wave,
+.voice-panel.listening .voice-pill .wave path { animation-play-state: running; }
+@keyframes pill-drift { from { transform: translateX(0); } to { transform: translateX(-150px); } }
+@keyframes pill-swell { from { transform: translateY(-1.6px); } to { transform: translateY(1.8px); } }
 
 /* ===== 채팅 위를 덮는 전체 화면 (다운로드·결제·리포트) ===== */
 .overlay {
