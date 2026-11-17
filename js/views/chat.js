@@ -28,6 +28,7 @@ const PILL_WAVES = '<svg viewBox="0 0 150 72" preserveAspectRatio="none" aria-hi
 
 const DEFAULT_TYPING_SPEED = 18; // 초당 글자 수
 const INPUT_MAX_HEIGHT = 132;
+const INPUT_MIN_HEIGHT = 44;
 const NEAR_BOTTOM_PX = 24;   // 맨 아래에서 이만큼 안이면 "맨 아래"로 본다 (Listening… 표시 판정)
 const NOTICE_LABEL = 'Current Probability of Success';
 
@@ -330,7 +331,7 @@ export function createChat(root, hooks = {}) {
   /** 사용자 동작(타이핑 후 Send, 또는 음성 모드에서 탭)을 기다린다 */
   function awaitUser(step) {
     return new Promise((resolve) => {
-      pending = { step, n: 0, resolve, reserved: 0 };
+      pending = { step, n: 0, resolve };
       resetKeyState();
       if (step.input !== 'voice') setVoice(false); // 타이핑 차례면 음성 모드를 닫는다
       renderVoice();
@@ -467,45 +468,43 @@ export function createChat(root, hooks = {}) {
   function renderInput() {
     const t = typing();
     const value = t ? t.step.text.slice(0, t.n) : '';
+    // 높이를 먼저 바꾸고 나서 글자를 넣는다. 새 줄로 넘어가는 글자가 들어갈 때 상자가 이미 커져 있어야
+    // iOS가 커서를 보이려고 화면을 밀어 올리지 않는다.
+    sizeInput(value);
     if (input.value !== value) input.value = value;
     if (document.activeElement === input) {
       try { input.setSelectionRange(value.length, value.length); } catch { /* 무시 */ }
     }
-    sizeInput();
     input.scrollTop = input.scrollHeight;
   }
 
-  // 입력창 높이. 타이핑 차례에 입력창을 탭하면(키보드가 올라오는 순간) 완성될 문장 기준으로 높이를 미리 잡아 두고,
-  // 타이핑 중에는 바꾸지 않는다. 글자가 늘어 두 줄로 넘어가는 순간 높이가 바뀌면 채팅 전체가 한 프레임 튀기 때문이다.
-  // 입력창이 화면에 없을 때(음성 모드)는 재지 않는다. 숨은 상태에서 재면 높이가 0이 되어
-  // X로 돌아왔을 때 'Ask Mapture' 문구가 잘린다.
+  // 입력창 높이: 글자에 맞춰 한 줄씩 커진다 (iMessage처럼). 채팅이 한 프레임도 튀지 않도록
+  //  - 높이는 화면 밖의 복제 요소(mirror)로 잰다. 진짜 입력창의 높이를 'auto'로 줄였다가 재는 방식은
+  //    그 순간 상자가 한 줄로 쪼그라들어 iOS Safari가 화면을 움직일 수 있다.
+  //  - 입력창 높이를 바꾸는 바로 그 코드 안에서 채팅 목록을 맨 아래로 맞춘다 (ResizeObserver를 기다리지 않음).
+  //    그래서 높이 변화와 맨 아래 유지가 같은 프레임 안에서 끝난다.
+  //  - 입력창이 화면에 없을 때(음성 모드)는 재지 않는다 (숨은 상태에서 재면 0이 되어 'Ask Mapture'가 잘린다).
+  const mirror = h('div', 'input-mirror');
+  mirror.setAttribute('aria-hidden', 'true');
+  input.parentNode.appendChild(mirror);
+
   function measure(text) {
-    const keep = input.value;
-    input.value = text;
-    input.style.height = 'auto';
-    const hgt = input.scrollHeight;
-    input.value = keep;
-    return Math.min(hgt, INPUT_MAX_HEIGHT);
+    mirror.style.width = input.clientWidth + 'px';
+    mirror.textContent = text + '\u200b'; // 끝의 줄바꿈·공백도 한 줄로 세게
+    return Math.max(INPUT_MIN_HEIGHT, Math.min(mirror.offsetHeight, INPUT_MAX_HEIGHT));
   }
 
-  function sizeInput() {
-    if (!input.offsetParent) return; // 숨어 있음 (음성 모드 등)
-    const t = typing();
-    let hgt;
-    if (t && (t.reserved || document.activeElement === input)) {
-      if (!t.reserved) t.reserved = measure(t.step.text);
-      hgt = t.reserved;
-    } else {
-      hgt = measure(input.value);
-    }
-    if (hgt > 0) input.style.height = hgt + 'px';
+  function sizeInput(value = input.value) {
+    if (!input.offsetParent || !input.clientWidth) return; // 숨어 있음 (음성 모드 등)
+    const next = measure(value) + 'px';
+    if (input.style.height === next) return;
+    const stick = nearBottom();
+    input.style.height = next;
+    if (stick) scrollToBottom(); // 같은 프레임 안에서 맨 아래 유지
   }
 
-  // 화면 폭이 바뀌면(회전 등) 미리 잡은 높이를 다시 잰다
-  window.addEventListener('resize', () => {
-    const t = typing();
-    if (t && t.reserved) { t.reserved = 0; sizeInput(); }
-  });
+  // 화면 폭이 바뀌면(회전 등) 다시 잰다
+  window.addEventListener('resize', () => sizeInput());
 
   const KEY_LINK_MS = 500;      // keydown 뒤 이 시간 안의 입력 이벤트는 그 키에 속한다
   const KEY_FALLBACK_MS = 60;   // keydown(229) 뒤 입력 이벤트가 안 오면 한 글자 입력으로 처리

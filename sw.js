@@ -5,7 +5,7 @@
 // ★ 앱 파일(html/css/js/아이콘)을 고쳐서 배포할 때는 CACHE_VERSION을 올릴 것.
 //   scenes.json만 고쳤다면 올릴 필요 없음.
 
-const CACHE_VERSION = 'v12';
+const CACHE_VERSION = 'v13';
 const CACHE_NAME = `mapture-${CACHE_VERSION}`;
 
 // 설치 시 미리 받아 둘 파일 (모두 상대 경로 → GitHub Pages 하위 경로에서도 동작)
@@ -30,6 +30,9 @@ const APP_FILES = [
   './scenes.json', // 첫 실행 직후 오프라인에서도 열리도록 미리 받아 둠 (이후에는 network-first로 갱신)
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './img/preview-1.jpg', // 스토어 Preview 캡처 (tools/make-previews.py)
+  './img/preview-2.jpg',
+  './img/preview-3.jpg',
 ];
 
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];

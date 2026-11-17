@@ -27,9 +27,9 @@ const EVENT_MASCOT = `<svg class="store-event-mascot" width="170" height="170" v
   <path d="M48 70q12 10 24 0" fill="none" stroke="#0F7B6C" stroke-width="4" stroke-linecap="round"/>
   <path d="M7 79Q60 92 113 49" fill="none" stroke="#7FCFC1" stroke-width="3" stroke-linecap="round"/></svg>`;
 
-/** Preview 스크린샷 한 장: 홍보 문구 + 폰 화면 속 말풍선 모양 */
-const shot = (title, bubbles) => `<div class="store-shot"><span>${title}</span><div class="store-shot-phone">${
-  bubbles.map(([side, w, hgt]) => `<i class="${side}" style="width:${w}%;height:${hgt}px"></i>`).join('')}</div></div>`;
+/** Preview 스크린샷 한 장: 홍보 문구 + 폰 틀 안의 실제 앱 화면 (img/preview-*.jpg, tools/make-previews.py로 다시 만듦) */
+const shot = (title, n) => `<div class="store-shot"><span>${title}</span><div class="store-shot-phone">`
+  + `<img src="img/preview-${n}.jpg" alt="" width="585" height="1149" draggable="false" decoding="async"></div></div>`;
 
 // 스토어 문구 초안 [TODO: 작가 확인] — 극 중 세계관(Mapture 6 출시, 미래 예측 앱). docs/content-drafts.md에 같은 목록.
 const REVIEWS = [
@@ -118,9 +118,9 @@ export function showDownload(root, hooks = {}) {
       <section class="store-sec">
         <h2>Preview</h2>
         <div class="store-shots hscroll" aria-hidden="true">
-          ${shot('Know what<br>happens next', [['me', 70, 22], ['ai', 85, 50], ['me', 60, 22], ['ai', 85, 60]])}
-          ${shot('Every decision,<br>analyzed', [['ai', 90, 80], ['me', 65, 22], ['ai', 90, 40]])}
-          ${shot('See ten years<br>ahead', [['mid', 40, 40], ['bar', 70, 10], ['bar', 55, 10]])}
+          ${shot('Know what<br>happens next', 1)}
+          ${shot('Every decision,<br>analyzed', 2)}
+          ${shot('Every step,<br>predicted', 3)}
         </div>
       </section>
       <section class="store-sec">

@@ -98,7 +98,8 @@ S03(재성의 폰)과 S04b(S04 재촬영용)는 다른 씬에 이어 붙지 않�
   - 리뷰 2 `Worth every token` ★5 minseo.p · 5d ago: Premium raised my probability of success by 4.2 points in one semester. I don't make a single decision without it anymore.
   - 리뷰 3 `Stopped overthinking` ★4 hyun_w · 1w ago: I used to agonize over every choice. Now I just ask. One star off because it told me not to adopt a cat.
   - 설명: Mapture 6 is here — our most accurate prediction engine yet. / Ask anything about your future and get an answer you can act on, with a probability attached. Mapture analyzes your behavioral patterns, contacts, schedule and academic records to tell you what happens next, and what to do about it. / • Instant predictions, by voice or text • Long-term simulation up to 10 years ahead • Real-time Progress Updates on your probability of success
-  - 정보 줄 5·6번째 칸(옆으로 넘겨야 보임): Language `EN + 41 More`, Size `212.4 MB`. Preview 세 번째 문구 `See ten years ahead`.
+  - 정보 줄 5·6번째 칸(옆으로 넘겨야 보임): Language `EN + 41 More`, Size `212.4 MB`. Preview 세 번째 문구 `Every step, predicted` (세 번째 캡처가 Detailed Analysis Report라서).
+  - Preview 이미지는 실제 앱 화면 캡처: S04 34.17% 답변 / S08 콘서트 답변 / S04 리포트 (`tools/make-previews.py`).
 - **씬별 대본 시각 (`phoneTime`, 2026-11-17 추가)** `[TODO: 작가 확인]` — 대본 원문이 없어 씬 제목·대사에서 추정. 이어 붙은 대화의 구분선 시각이 됩니다.
 
   | 씬 | phoneTime | 근거 |

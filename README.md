@@ -29,6 +29,8 @@ icons/                앱 아이콘 (192, 512, svg)
 tools/make-icons.py   아이콘 재생성 스크립트 (python3 tools/make-icons.py)
 tools/check.py        Playwright 자동 확인 스크립트 (아래 8장)
 tools/cue-sheet.py    scenes.json → docs/cue-sheet.md (촬영 큐시트)
+tools/make-previews.py 스토어 Preview 스크린샷(img/preview-*.jpg)을 실제 앱 화면에서 다시 캡처
+img/                  스토어 Preview 캡처 이미지
 tools/format-scenes.py scenes.json을 "한 단계 = 한 줄"로 다시 정렬
 docs/cue-sheet.md     씬별 촬영 큐시트 (자동 생성)
 docs/content-drafts.md 작가 확인이 필요한 초안 목록
@@ -244,7 +246,12 @@ python3 -m http.server 8000                      # 다른 터미널에서
 ~/mapture-venv/bin/python tools/check.py         # 전체
 ~/mapture-venv/bin/python tools/check.py --only typing,menu
 ~/mapture-venv/bin/python tools/check.py --base https://<계정>.github.io/mapture/   # 배포본 확인
+~/mapture-venv/bin/python tools/check.py --browser webkit   # iPhone Safari와 같은 엔진(WebKit)으로
+~/mapture-venv/bin/python tools/make-previews.py            # 스토어 Preview 이미지 다시 만들기 (그 뒤 CACHE_VERSION 올리기)
 ```
+
+WebKit은 처음 한 번 설치가 필요합니다: `~/mapture-venv/bin/python -m playwright install webkit` 그리고
+`sudo ~/mapture-venv/bin/python -m playwright install-deps webkit` (시스템 라이브러리).
 
 실제 Gboard의 동작과 진짜 키보드 애니메이션은 흉내만 내므로, 최종 확인은 폰에서 해야 합니다.
 

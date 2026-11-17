@@ -35,6 +35,10 @@ def check(name, ok, detail=""):
     print(f"{'PASS' if ok else 'FAIL'}  {name}{('  — ' + str(detail)) if detail else ''}")
 
 
+IPHONE_UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+             "Version/18.0 Mobile/15E148 Safari/604.1")
+
+
 class Run:
     def __init__(self, browser, base):
         self.browser = browser
@@ -43,6 +47,8 @@ class Run:
     def page(self, scene=None, width=390, height=844, chain=False, **ctx_kw):
         opts = dict(PHONE)
         opts["viewport"] = {"width": width, "height": height}
+        if self.browser.browser_type.name == "webkit":
+            opts["user_agent"] = IPHONE_UA
         opts.update(ctx_kw)
         ctx = self.browser.new_context(**opts)
         page = ctx.new_page()
@@ -308,23 +314,42 @@ def t_long_input(run):
 
 
 def t_input_height(run):
-    """고스트 타이핑 중 입력창 높이가 바뀌지 않는다 (두 줄로 넘어가는 순간 채팅이 튀지 않게).
-    음성 모드에서 X로 나오면 'Ask Mapture' 문구가 잘리지 않는다."""
-    for sid, w in (("S11", 360), ("S15", 390)):
+    """고스트 타이핑 중 입력창은 줄이 넘어갈 때 한 줄씩 커지고(처음엔 한 줄), 채팅은 한 프레임도 튀지 않는다.
+    매 프레임(requestAnimationFrame) 입력창 위쪽과 마지막 말풍선 아래쪽 사이 간격을 기록해, 항상 같은지 본다.
+    줄이 넘어가는 순간 전후 화면도 찍는다. 음성 모드에서 X로 나오면 'Ask Mapture' 문구가 잘리지 않는다."""
+    for sid, w in (("S09", 360), ("S15", 390)):
         text = first_typing_text(sid)
-        page = run.page(sid, w, 844)
+        page = run.page(sid, w, 844, chain=True)
         open_keyboard(page)
         h0 = page.evaluate("document.querySelector('#ask').getBoundingClientRect().height")
-        page.evaluate("""() => { window.__h = new Set(); window.__top = new Set();
-          const ta = document.querySelector('#ask'), s = document.querySelector('.scroller');
-          new ResizeObserver(() => window.__h.add(ta.getBoundingClientRect().height)).observe(ta);
-          const tick = () => { window.__h.add(ta.getBoundingClientRect().height); requestAnimationFrame(tick); }; tick(); }""")
-        for _ in range(len(text)):
+        page.evaluate("""() => { window.__f = [];
+          const ta = document.querySelector('#ask'), sc = document.querySelector('.scroller');
+          const tick = () => { const last = [...document.querySelectorAll('.messages > .msg')].pop();
+            window.__f.push([Math.round(ta.getBoundingClientRect().top * 2) / 2, last ? Math.round(last.getBoundingClientRect().bottom * 2) / 2 : null,
+                             Math.round(ta.getBoundingClientRect().height), window.scrollY, (visualViewport && visualViewport.offsetTop) || 0]);
+            window.__raf = requestAnimationFrame(tick); }; tick(); }""")
+        wraps, prev_h = [], h0
+        for i in range(len(text)):
             page.keyboard.press("a")
-        page.wait_for_timeout(100)
-        hs = page.evaluate("[...window.__h]")
-        check(f"{sid} ({w}px): input height is set for the full sentence on tap and never changes while typing",
-              len(hs) == 1 and hs[0] == h0 and h0 > 44 and page.input_value("#ask") == text, (h0, hs))
+            hh = page.evaluate("document.querySelector('#ask').getBoundingClientRect().height")
+            if hh != prev_h:
+                wraps.append(i)
+                if len(wraps) == 1:
+                    run.shot(page, f"inputh-{sid}-after-wrap")
+                prev_h = hh
+            elif not wraps and i + 1 < len(text):
+                run.shot(page, f"inputh-{sid}-before-wrap")  # 줄이 넘어가기 직전까지 덮어쓴다
+            page.wait_for_timeout(16)
+        page.wait_for_timeout(120)
+        frames = page.evaluate("cancelAnimationFrame(window.__raf), window.__f")
+        gaps = sorted({round(f[0] - f[1], 1) for f in frames if f[1] is not None})
+        heights = sorted({f[2] for f in frames})
+        moved = [f for f in frames if f[3] or f[4]]
+        check(f"{sid} ({w}px): input starts one line high and grows a line at a time as the text wraps",
+              round(h0) == 44 and len(heights) >= 2 and all(b - a in (22,) for a, b in zip(heights, heights[1:]))
+              and page.input_value("#ask") == text, (h0, heights, wraps))
+        check(f"{sid} ({w}px): every frame, the last bubble stays glued above the input (no one-frame jump)",
+              len(gaps) == 1 and not moved, (gaps, len(frames), moved[:3]))
         page.context.close()
 
     page = run.page("S06")
@@ -341,6 +366,21 @@ def t_input_height(run):
     page.context.close()
 
 
+def t_report_s04b(run):
+    """S04b(재촬영용)의 리포트: 예측 시각이 질문 시각 17·18분 뒤 (질문보다 앞서면 안 됨)"""
+    page = run.page("S04b")
+    page.locator(".report-link").first.tap()
+    page.wait_for_selector(".overlay-report")
+    times = page.locator(".tl-time").all_inner_texts()
+    asked = page.inner_text(".report-q .cap")
+    def minutes(label):
+        h, m, ap = re.search(r"(\d+):(\d+) (AM|PM)", label).groups()
+        return (int(h) % 12 + (12 if ap == "PM" else 0)) * 60 + int(m)
+    check("S04b report: timeline 17 and 18 minutes after the question",
+          [(minutes(t) - minutes(asked)) % 1440 for t in times] == [17, 18], f"{asked} -> {times}")
+    page.context.close()
+
+
 def t_store(run):
     """스토어 화면: 세로 스크롤(리뷰·설명), 정보 줄·Preview 가로 넘기기, GET 말고는 반응 없음"""
     page = run.page("S04", 390, 844)
@@ -352,6 +392,10 @@ def t_store(run):
           info["v"] and info["reviews"] >= 2 and "4.9" in info["rating"] and "out of 5" in info["rating"]
           and "Mapture 6" in page.inner_text(".store-desc"), info)
     check("info row and Preview row can be swiped sideways", info["h1"] and info["h2"], info)
+    page.wait_for_function("[...document.querySelectorAll('.store-shot img')].every(i => i.complete)", timeout=8000)
+    imgs = page.evaluate("[...document.querySelectorAll('.store-shot img')].map(i => [i.naturalWidth, Math.round(i.getBoundingClientRect().width)])")
+    check("Preview cards show real app screenshots (3 images loaded, fill the phone frame)",
+          len(imgs) == 3 and all(n > 500 and 150 < w < 200 for n, w in imgs), imgs)
     page.evaluate("document.querySelector('.store-info').scrollLeft = 200")
     page.wait_for_timeout(500)
     check("info row actually scrolls sideways", page.evaluate("document.querySelector('.store-info').scrollLeft") > 50)
@@ -539,6 +583,8 @@ def t_voice(run):
           "Is anyone going to contact me tonight?" in page.inner_text(".report-q-text") and gap == [17, 18]
           and page.locator(".tl-prob").all_inner_texts() == ["99.1%", "98.2%"] and page.locator(".chips span").count() == 4,
           f"{asked} -> {times}")
+    chip = page.evaluate("getComputedStyle(document.querySelector('.chips span')).borderTopWidth")
+    check("report: 'Based on' tags are drawn as chips", chip == "1px", chip)
     check("report fits, no overflow", not no_overflow(page), no_overflow(page))
     run.shot(page, "report-360")
     page.tap(".overlay-report [data-ref=back]")
@@ -1044,7 +1090,7 @@ def t_pwa(run):
     page.context.close()
 
 
-TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "inputh": t_input_height, "store": t_store, "voice": t_voice, "vscroll": t_voice_scroll, "voicex": t_voice_x, "auto": t_autosubmit,
+TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "inputh": t_input_height, "store": t_store, "report4b": t_report_s04b, "voice": t_voice, "vscroll": t_voice_scroll, "voicex": t_voice_x, "auto": t_autosubmit,
          "chain": t_chain, "open": t_open, "guard": t_guard, "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "notice": t_notice, "compare": t_compare, "json": t_json_error, "pwa": t_pwa}
 
 
@@ -1052,10 +1098,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:8000/")
     ap.add_argument("--only", default="", help="쉼표로 구분: " + ",".join(TESTS))
+    ap.add_argument("--browser", default="chromium", choices=["chromium", "webkit"],
+                    help="webkit = iPhone Safari와 같은 엔진 (설치: sudo ~/mapture-venv/bin/python -m playwright install-deps webkit)")
     args = ap.parse_args()
     names = [n for n in args.only.split(",") if n] or list(TESTS)
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = getattr(p, args.browser).launch()
         run = Run(browser, args.base)
         for name in names:
             print(f"--- {name}")

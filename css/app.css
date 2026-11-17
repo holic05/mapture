@@ -420,6 +420,22 @@ a { color: var(--accent); }
   scrollbar-width: none;
 }
 .composer textarea::-webkit-scrollbar { display: none; }
+/* 입력창 높이를 재는 보이지 않는 복제 요소 (js의 measure). 글꼴·여백·줄바꿈 규칙을 textarea와 똑같이 */
+.composer { position: relative; }
+.input-mirror {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  box-sizing: border-box;
+  padding: 11px 2px;
+  font-size: 16px;
+  line-height: 22px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
 .composer textarea::placeholder { color: var(--muted); }
 
 /* ===== 키보드가 열렸을 때 (html.kb-open, js/app.js가 붙임) ===== */
@@ -911,20 +927,15 @@ a { color: var(--accent); }
 .store-shot > span { min-height: 50px; font-size: 21px; font-weight: 600; line-height: 1.2; text-align: center; }
 .store-shot-phone {
   flex: 1;
+  min-height: 0;
   border-radius: 22px 22px 0 0;
   border: 5px solid var(--ios-ink);
   border-bottom: 0;
   background: #FFFFFF;
-  padding: 30px 10px 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 6px;
+  overflow: hidden;
 }
-.store-shot-phone i { display: block; border-radius: 12px; background: var(--bubble); align-self: flex-start; }
-.store-shot-phone i.me { align-self: flex-end; background: var(--accent); }
-.store-shot-phone i.mid { align-self: center; background: var(--accent); }
-.store-shot-phone i.bar { align-self: center; background: var(--avatar); }
+/* 실제 앱 화면 캡처 (tools/make-previews.py가 만든 img/preview-*.jpg) */
+.store-shot-phone img { display: block; width: 100%; height: auto; }
 /* 떠 있는 캡슐 모양 탭 바 */
 .store-tabs {
   position: absolute;
@@ -1158,6 +1169,8 @@ a { color: var(--accent); }
 .tl-time { font-size: 14px; font-weight: 700; color: var(--accent); }
 .tl-event { font-size: 16px; line-height: 1.45; overflow-wrap: break-word; }
 .tl-prob { align-self: flex-start; font-size: 13px; font-weight: 600; color: var(--accent-dark); background: var(--accent-soft); border-radius: 12px; padding: 4px 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips span { font-size: 13px; border: 1px solid var(--divider); border-radius: 14px; padding: 5px 12px; }
 .report-based { margin-top: auto; border-top: 1px solid var(--line); padding: 16px 0 28px; display: flex; flex-direction: column; gap: 10px; }
 
 /* ===== 촬영 중 사고 방지 ===== */
