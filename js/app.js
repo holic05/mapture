@@ -109,6 +109,12 @@ function validate(data) {
     seen.add(scene?.id);
     if (scene?.after != null && !data.scenes.some((x) => x?.id === scene.after)) out.push(`${name}: "after" points to unknown scene "${scene.after}"`);
     if (scene?.gap != null && !/^\s*\d+(\.\d+)?\s*[mhdwy]\s*$/.test(String(scene.gap))) out.push(`${name}: "gap" must look like "14h", "2d" or "2y"`);
+    if (scene?.notice != null) {
+      const n = scene.notice;
+      if (typeof n !== 'object' || n.value == null) out.push(`${name}.notice: needs "value"`);
+      else if (n.size != null && !['compact', 'large'].includes(n.size)) out.push(`${name}.notice.size: must be "compact" or "large"`);
+      else if (n.appear != null && !['start', 'drop'].includes(n.appear)) out.push(`${name}.notice.appear: must be "start" or "drop"`);
+    }
     for (const key of ['history', 'steps']) {
       const steps = scene?.[key];
       if (steps == null) continue;
@@ -119,8 +125,10 @@ function validate(data) {
         else if (step.type === 'user') {
           if (typeof step.text !== 'string' || !step.text) out.push(`${where}: user step needs "text"`);
           if (!['typing', 'voice'].includes(step.input)) out.push(`${where}: "input" must be "typing" or "voice"`);
-        } else if (step.type === 'mapture' && !step.headline && !step.body && !step.list) {
-          out.push(`${where}: mapture step needs "headline", "body" or "list"`);
+        } else if (step.type === 'mapture' && !step.headline && !step.body && !step.list && !step.compare) {
+          out.push(`${where}: mapture step needs "headline", "body", "list" or "compare"`);
+        } else if (step.type === 'mapture' && step.compare && !(Array.isArray(step.compare.items) && step.compare.items.length === 2)) {
+          out.push(`${where}: "compare" needs exactly two "items"`);
         }
       });
     }

@@ -107,9 +107,9 @@ def no_overflow(page):
 
 
 def pass_download(page):
-    """스토어 화면: Download → Open → 실행 애니메이션이 끝날 때까지"""
+    """스토어 화면: GET → 진행 링 → OPEN → 실행 애니메이션이 끝날 때까지"""
     page.tap(".store-btn")
-    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=15000)
+    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'OPEN'", timeout=15000)
     page.tap(".store-btn")
     page.wait_for_selector(".overlay", state="detached", timeout=8000)
 
@@ -307,16 +307,73 @@ def t_long_input(run):
     page.context.close()
 
 
+def voice_layout(page, state):
+    """음성 모드 구조: 떠 있는 컨트롤(같은 위치·크기), 목록은 화면 맨 아래까지, 배경 초록은 듣는 중에만"""
+    info = page.evaluate("""() => {
+      const q = (s) => document.querySelector(s), r = (s) => q(s).getBoundingClientRect();
+      const btns = [...document.querySelectorAll('.voice-btn')].map(b => getComputedStyle(b).backgroundColor);
+      return { scrollerBottom: r('.chat-main').bottom, h: innerHeight, panelBg: getComputedStyle(q('.voice-panel')).backgroundColor,
+               pill: [r('.voice-pill').x, r('.voice-pill').y, r('.voice-pill').width, r('.voice-pill').height],
+               mic: [r('.voice-btn').x, r('.voice-btn').y], opaque: btns.every(c => c.startsWith('rgb(')),
+               green: getComputedStyle(q('.screen.chat'), '::before').opacity,
+               label: getComputedStyle(q('.voice-status')).visibility };
+    }""")
+    if not hasattr(page, "voice_ref"):
+        page.voice_ref = (info["pill"], info["mic"])
+    check(f"voice ({state}): chat runs to the bottom edge behind floating, opaque controls",
+          abs(info["scrollerBottom"] - info["h"]) < 1 and info["panelBg"] == "rgba(0, 0, 0, 0)" and info["opaque"], info)
+    check(f"voice ({state}): controls keep the same position and size", (info["pill"], info["mic"]) == page.voice_ref)
+    listening = state == "listening"
+    check(f"voice ({state}): bottom green {'on' if listening else 'off'}, Listening… {'shown' if listening else 'hidden'}",
+          (info["green"] == "1") == listening and (info["label"] == "visible") == listening, (info["green"], info["label"]))
+
+
+def t_voice_scroll(run):
+    """듣는 중 스크롤: Listening…만 숨고 듣기는 계속, 맨 아래로 오면 다시 보인다. 듣기 시작하면 맨 아래로 내려간다."""
+    page = run.page("S04b", 390, 844)
+    page.evaluate("document.querySelector('.scroller').scrollTop = 0")
+    page.tap(".mic")
+    page.wait_for_timeout(400)
+    at = page.evaluate("""() => { const s = document.querySelector('.scroller'), last = [...document.querySelectorAll('.msg')].pop();
+      return { gap: s.scrollHeight - s.scrollTop - s.clientHeight, lastBottom: last.getBoundingClientRect().bottom,
+               label: document.querySelector('.voice-status').getBoundingClientRect().top }; }""")
+    check("listening starts scrolled to the bottom; last bubble ends above Listening…", at["gap"] < 2 and at["lastBottom"] <= at["label"], at)
+    page.evaluate("document.querySelector('.scroller').scrollTop -= 400")
+    page.wait_for_timeout(200)
+    vis = page.evaluate("getComputedStyle(document.querySelector('.voice-status')).visibility")
+    check("scrolling up while listening hides only Listening… (still listening)",
+          vis == "hidden" and page.evaluate("document.querySelector('.voice-panel').classList.contains('listening')"), vis)
+    run.shot(page, "voice-scrolled")
+    page.evaluate("document.querySelector('.scroller').scrollTop = 1e6")
+    page.wait_for_timeout(200)
+    check("back at the bottom: Listening… shows again", page.evaluate("getComputedStyle(document.querySelector('.voice-status')).visibility") == "visible")
+    top = page.evaluate("""() => { const t = document.querySelector('.topbar'), f = getComputedStyle(t, '::before');
+      return [f.backgroundImage.includes('gradient'), document.querySelector('.scroller').getBoundingClientRect().top]; }""")
+    check("chat list starts under the header, which fades bubbles to white", top[0] and top[1] <= 0.5, top)
+    check("no page errors", not page.errors, page.errors)
+    page.context.close()
+
+
 def t_voice(run):
     """S#4 전체: 다운로드 → 실행 → 음성 모드 Q&A → 리포트 → 34.17% → Upgrade → 결제 → Premium"""
     page = run.page("S04", 360, 740)
-    check("S04 opens on the store page", page.locator(".overlay-download").is_visible() and page.inner_text(".store-dev") == "Oracle Inc.")
-    check("store page fits, no overflow", not no_overflow(page), no_overflow(page))
+    check("S04 opens on the store page", page.locator(".overlay-download").is_visible() and page.inner_text(".store-dev") == "Oracle Inc."
+          and page.inner_text(".store-btn") == "GET" and page.locator(".store-tabs > div").count() == 4 and "Arcade" not in page.inner_text(".store-tabs"))
+    cut = page.evaluate("(() => { const c = document.querySelectorAll('.store-info > div'); const r = c[3].getBoundingClientRect(); return r.left < innerWidth && r.right > innerWidth; })()")
+    check("store info row: the fourth cell is cut off at the right edge", cut)
+    over = page.evaluate("""() => [...document.querySelectorAll('#app *')].filter(el => {
+      const r = el.getBoundingClientRect();  // 정보 줄과 Preview 줄은 옆으로 넘기는 줄이라 일부러 오른쪽에서 잘린다
+      return r.width > 0 && (r.right > innerWidth + 0.5 || r.left < -0.5) && !el.closest('svg, .store-info, .store-shots');
+    }).map(el => el.className || el.tagName).slice(0, 5)""")
+    check("store page fits, no other overflow", not over, over)
     run.shot(page, "download-360")
     page.tap(".store-btn")
     page.wait_for_timeout(900)
     run.shot(page, "download-progress-360")
-    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=6000)
+    check("GET turns into a progress ring with a stop square, no percentage",
+          page.locator(".store-ring").is_visible() and not page.locator(".store-btn").is_visible()
+          and page.locator(".store-ring rect").count() == 1 and "%" not in page.inner_text(".store"))
+    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'OPEN'", timeout=8000)
     run.shot(page, "download-open-360")
     page.tap(".store-btn")
     page.wait_for_timeout(330)
@@ -331,6 +388,7 @@ def t_voice(run):
           page.locator(".voice-panel").is_visible() and not page.locator(".composer").is_visible()
           and page.inner_text(".voice-status") == "Listening…" and page.locator(".bubble-user").count() == 0)
     run.shot(page, "voice-listening-360")
+    voice_layout(page, "listening")
     for i in range(answers):
         if i > 0:
             # 질문이 올라간 뒤에는 대기 상태: 다른 곳을 탭해도 올라가지 않고, 알약을 눌러야 다시 듣는다
@@ -342,6 +400,8 @@ def t_voice(run):
                 check("standby: no Listening label, tapping elsewhere does not send",
                       page.inner_text(".voice-status").strip() == "" and page.locator(".bubble-user").count() == i)
                 run.shot(page, "voice-standby-360")
+            if i == 1:
+                voice_layout(page, "waiting")
             page.tap(".voice-pill", force=True)
             page.wait_for_timeout(200)
             if i == 1:
@@ -353,6 +413,9 @@ def t_voice(run):
         if i == 0:
             page.wait_for_selector(".bubble-loading")
             check("voice mode stays on while Mapture answers", page.locator(".voice-panel").is_visible())
+            voice_layout(page, "responding")
+            check("scrolling is locked while Mapture answers (loading included)",
+                  page.evaluate("getComputedStyle(document.querySelector('.scroller')).overflowY") == "hidden")
             run.shot(page, "voice-loading-360")
         if i == 3:
             page.wait_for_selector(".loading-bar")
@@ -579,7 +642,7 @@ def t_open(run):
     page = run.page("S04")
     t0 = time.time()
     page.tap(".store-btn")
-    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'Open'", timeout=15000)
+    page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'OPEN'", timeout=15000)
     took = time.time() - t0
     want = scene_by_id("S04").get("downloadSeconds", 3)
     check("download takes about downloadSeconds", want - 0.3 <= took <= want + 1.0, f"{took:.2f}s (want {want}s)")
@@ -765,7 +828,8 @@ def t_menu(run):
     cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
     page.locator(".sheet-item", has_text="S15").tap()
     page.wait_for_timeout(2500)
-    check("reset cancels the previous scene's timers", page.locator(".bubble-mapture").count() == 0 and page.locator(".empty").is_visible())
+    check("reset cancels the previous scene's timers (S13a card never drops into S15)",
+          page.locator(".bubble-mapture").count() == 0 and page.locator(".empty").is_visible() and page.locator(".notice").is_hidden())
     page.goto(run.url())
     page.wait_for_selector(".composer")
     page.wait_for_timeout(300)
@@ -776,18 +840,75 @@ def t_menu(run):
     page.context.close()
 
 
-def t_progress(run):
-    """S#13: history 위에 Progress Update 하나가 도착"""
-    page = run.page("S13d", chain=True)
-    before = page.locator(".bubble-mapture.progress").count()
-    page.wait_for_function(f"document.querySelectorAll('.bubble-mapture.progress').length === {before + 1}", timeout=5000)
+def t_notice(run):
+    """확률 공지 카드: S09는 처음부터, S#13은 1초 뒤 위에서 내려온다. 채팅 기록에는 남지 않는다."""
+    page = run.page("S09", chain=True)
+    n = page.locator(".notice")
+    check("S09: notice card is up from the start, compact, under the header",
+          n.is_visible() and "71.23%" in n.inner_text() and "Current Probability of Success" in n.inner_text()
+          and "▲ 0.10" in n.inner_text() and "large" not in (n.get_attribute("class") or ""))
+    prog = page.locator(".bubble-mapture.progress").all_inner_texts()
+    check("S09: the card replaces the Progress Update message (only S06's in-chat updates remain)",
+          not any("71.23%" in t for t in prog), prog)
+    page.evaluate("document.querySelector('.scroller').scrollTop = 0")
+    page.wait_for_timeout(100)
+    clear = page.evaluate("""() => document.querySelector('.msg').getBoundingClientRect().top >= document.querySelector('.notice').getBoundingClientRect().bottom""")
+    check("scrolled to the top: the first message is not hidden behind the card", clear)
+    run.shot(page, "notice-s09")
+    page.tap(".notice-x")
     page.wait_for_timeout(400)
-    last = page.locator(".bubble-mapture.progress").last
-    check("S13d: one Progress Update arrives on top of history",
-          before >= 3 and "73.39%" in last.inner_text() and "▲ 0.51" in last.inner_text(), last.inner_text())
-    up = page.evaluate("getComputedStyle([...document.querySelectorAll('.headline-delta')].pop()).color")
+    check("X dismisses the card", n.is_hidden())
+    page.context.close()
+
+    page = run.page("S13d", 360, 740, chain=True)
+    page.wait_for_timeout(200)
+    hidden_first = page.locator(".notice").is_hidden()
+    page.wait_for_timeout(1300)
+    n = page.locator(".notice")
+    check("S13d: card drops in about 1s after the scene starts", hidden_first and n.is_visible() and "73.39%" in n.inner_text()
+          and "▲ 0.51" in n.inner_text(), n.inner_text() if n.is_visible() else "hidden")
+    up = page.evaluate("getComputedStyle(document.querySelector('.notice-delta')).color")
     check("▲ uses the up colour", up == "rgb(31, 95, 191)", up)
-    run.shot(page, "s13d")
+    prog = page.locator(".bubble-mapture.progress").all_inner_texts()
+    check("S#13 cards never become chat messages (also not from earlier cuts)",
+          not any(v in t for t in prog for v in ("69.53%", "73.22%", "72.88%", "73.39%", "71.23%")), prog)
+    check("notice card fits at 360px", not no_overflow(page), no_overflow(page))
+    run.shot(page, "notice-s13d")
+    page.context.close()
+
+    # size: large
+    def large(route):
+        data = json.loads(route.fetch().text())
+        next(s for s in data["scenes"] if s["id"] == "S09")["notice"]["size"] = "large"
+        route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
+    page = run.page(False, 360, 740)
+    page.route("**/scenes.json*", large)
+    run.open(page, "S09")
+    size = page.evaluate("parseFloat(getComputedStyle(document.querySelector('.notice-value')).fontSize)")
+    check("size large: only the number gets big", size > 45 and not no_overflow(page), size)
+    run.shot(page, "notice-large-360")
+    page.context.close()
+
+
+def t_compare(run):
+    """S#11: 짧은 한 문장 + 두 숫자를 나란히 보여 주는 비교 블록"""
+    page = run.page("S11", 360, 740)
+    text = first_typing_text("S11")
+    page.tap("#ask")
+    for _ in range(len(text)):
+        page.keyboard.press("a")
+    page.tap(".send")
+    page.wait_for_selector(".compare", timeout=8000)
+    wait_typing_done(page)
+    info = page.evaluate("""() => { const c = [...document.querySelectorAll('.compare-item')].map(e => e.getBoundingClientRect());
+      return { n: c.length, sameRow: c.length === 2 && Math.abs(c[0].top - c[1].top) < 1 && c[0].right <= c[1].left,
+               values: [...document.querySelectorAll('.compare-value')].map(e => e.textContent),
+               diff: document.querySelector('.compare-diff')?.textContent }; }""")
+    check("S11: two items side by side with their numbers, small difference below",
+          info["sameRow"] and info["values"] == ["70.98%", "70.97%"] and bool(info["diff"]), info)
+    check("S11 compare fits at 360px", not no_overflow(page), no_overflow(page))
+    run.shot(page, "s11-compare-360")
+    check("no page errors", not page.errors, page.errors)
     page.context.close()
 
 
@@ -821,13 +942,13 @@ def t_pwa(run):
     page.wait_for_selector(".composer")
     page.wait_for_timeout(500)
     check("offline: app opens and the scene loads from cache",
-          page.locator(".bubble-mapture.progress").count() == 1 and page.locator(".fatal").count() == 0)
+          page.locator(".notice").is_visible() and page.locator(".fatal").count() == 0)
     run.shot(page, "offline-s09")
     page.context.close()
 
 
-TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "voice": t_voice, "voicex": t_voice_x, "auto": t_autosubmit,
-         "chain": t_chain, "open": t_open, "guard": t_guard, "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "progress": t_progress, "json": t_json_error, "pwa": t_pwa}
+TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "voice": t_voice, "vscroll": t_voice_scroll, "voicex": t_voice_x, "auto": t_autosubmit,
+         "chain": t_chain, "open": t_open, "guard": t_guard, "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "notice": t_notice, "compare": t_compare, "json": t_json_error, "pwa": t_pwa}
 
 
 def main():

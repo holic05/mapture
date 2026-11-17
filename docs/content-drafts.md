@@ -84,6 +84,11 @@ S03(재성의 폰)과 S04b(S04 재촬영용)는 다른 씬에 이어 붙지 않�
 
 ### 기타
 
-- **다운로드 시간:** S04 `downloadSeconds: 3` (이전 2초). 촬영하며 조절.
+- **다운로드 시간:** S04 `downloadSeconds: 4` (원형 진행 링, 2026-11-17 요청으로 3초 → 4초). 촬영하며 조절.
 - **맞출 폰 시각 (`phoneTime`, 큐시트 표시용):** S03 `3:30 PM` (대사의 `Estimated arrival: 3:32 p.m.`, 2분 뒤), S04 `9:22 PM` (대사의 `in 17 minutes, at 9:39 p.m.`), S04b `9:47 PM` (목업 기준 임의).
-- **스토어 화면 문구:** 평점 4.8 · 리뷰 2.1M · 다운로드 50M+ · 12+ · 소개 문구는 목업이 없어 임의로 넣었습니다 (`js/views/download.js`).
+- **스토어 화면 문구:** iPhone 앱 스토어 구조로 바꾸면서 Store-1~3 목업 문구를 그대로 씁니다
+  (7.2M Ratings · 4.9 · Age 12+ · Chart #1 Productivity · Developer Oracle Inc. · Events `Meet Mapture 6` · Preview 문구 2개). `js/views/download.js`.
+- **S11 답변 (비교 블록):** 대본의 "두 숫자가 화면에 나란히"에 맞춰 짧은 한 문장 + 비교 블록으로 바꿨습니다.
+  문장 `Here's how your probability of success compares for this semester!`와 차이 표시 `Difference: 0.01 percentage points`는 초안입니다.
+  원래 문장은 `note`에 보존.
+- **S09 공지 카드의 증감:** `▲ 0.10` (S08의 71.13% → 71.23%, 목업 S09-Notice-Compact와 같음).

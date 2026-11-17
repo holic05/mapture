@@ -1,88 +1,127 @@
-// ① 다운로드 페이지: 앱 안의 가짜 스토어 화면 → Download → Open → 실행 애니메이션
+// ① 다운로드 페이지: iPhone 앱 스토어의 앱 상세 화면 구조를 흉내 낸 가짜 스토어 → GET → 진행 링 → OPEN → 실행 애니메이션
+// (레이아웃만 참고. 실제 스토어의 로고·이름·다른 앱 이미지는 쓰지 않는다)
 import { mascotSVG, faceSVG } from '../mascot.js';
 import { openOverlay, wait } from './overlay.js';
 
-const DEFAULT_DOWNLOAD_SECONDS = 3; // 씬의 downloadSeconds로 바꿀 수 있다
+const DEFAULT_DOWNLOAD_SECONDS = 4; // 씬의 downloadSeconds로 바꿀 수 있다
 const SWITCH_MS = 560;              // 스토어 카드가 밀려 나가고 맵쳐 카드가 들어와 커지는 시간 (css의 switch-out/in과 같게)
 const SPLASH_HOLD_MS = 220;         // 전체 화면이 된 뒤 인사 화면으로 넘어가기 전 잠깐 머무는 시간
+const RING_R = 13;
+const RING_LEN = 2 * Math.PI * RING_R;
 
 const ICON = {
-  back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1D1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
-  search: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1D1C" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>',
-  more: '<svg width="20" height="20" viewBox="0 0 24 24" fill="#1A1D1C" aria-hidden="true"><circle cx="12" cy="5.5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="18.5" r="1.7"/></svg>',
-  star: '<svg width="12" height="12" viewBox="0 0 24 24" fill="#1A1D1C" aria-hidden="true"><path d="M12 3l2.7 5.8 6.3.8-4.6 4.3 1.2 6.3L12 17.1 6.4 20.2l1.2-6.3L3 9.6l6.3-.8z"/></svg>',
+  back: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+  developer: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="10" r="3"/><path d="M6 19c1.5-3 3.5-4 6-4s4.5 1 6 4"/></svg>',
+  // 탭 바 아이콘: 단순한 도형으로 직접 그린 것
+  today: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8.5 15h7M8.5 18h4" stroke-linecap="round"/></svg>',
+  games: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8h10a4 4 0 0 1 4 4v2a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.8A3 3 0 0 1 3 14v-2a4 4 0 0 1 4-4z"/><path d="M8 11v3M6.5 12.5h3"/></svg>',
+  apps: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5M3 16.5L12 21l9-4.5" stroke-linecap="round"/></svg>',
+  search: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>',
 };
+
+/** Events 카드의 마스코트 (청록 배경 위의 밝은 얼굴) */
+const EVENT_MASCOT = `<svg class="store-event-mascot" width="170" height="170" viewBox="0 0 120 120" aria-hidden="true">
+  <ellipse cx="60" cy="64" rx="56" ry="15" fill="none" stroke="#7FCFC1" stroke-opacity="0.6" stroke-width="3" transform="rotate(-14 60 64)"/>
+  <circle cx="60" cy="60" r="36" fill="#EAF6F3"/><circle cx="48" cy="58" r="5" fill="#0F7B6C"/><circle cx="72" cy="58" r="5" fill="#0F7B6C"/>
+  <path d="M48 70q12 10 24 0" fill="none" stroke="#0F7B6C" stroke-width="4" stroke-linecap="round"/>
+  <path d="M7 79Q60 92 113 49" fill="none" stroke="#7FCFC1" stroke-width="3" stroke-linecap="round"/></svg>`;
+
+/** Preview 스크린샷 한 장: 홍보 문구 + 폰 화면 속 말풍선 모양 */
+const shot = (title, bubbles) => `<div class="store-shot"><span>${title}</span><div class="store-shot-phone">${
+  bubbles.map(([side, w, hgt]) => `<i class="${side}" style="width:${w}%;height:${hgt}px"></i>`).join('')}</div></div>`;
 
 /**
  * @param {HTMLElement} root
  * @param {{seconds?: number, onMenuLongPress?: Function, onLaunched?: Function}} hooks
- *   seconds: 다운로드 진행 바가 차는 시간(초)
+ *   seconds: 진행 링이 다 차는 시간(초)
  *   onLaunched: 실행 애니메이션이 끝나 채팅 화면이 드러나는 순간
  */
 export function showDownload(root, hooks = {}) {
   const ov = openOverlay(root, 'download', `
-    <header class="ov-top">
-      <button type="button" class="icon-btn" data-menu aria-label="Back">${ICON.back}</button>
-      <span class="ov-top-spacer"></span>
-      <button type="button" class="icon-btn plain" aria-label="Search">${ICON.search}</button>
-      <button type="button" class="icon-btn plain" aria-label="More">${ICON.more}</button>
+    <header class="store-top">
+      <button type="button" class="store-round" data-menu aria-label="Back">${ICON.back}</button>
+      <button type="button" class="store-round" aria-label="Share">${ICON.share}</button>
     </header>
     <main class="store">
       <div class="store-head">
-        <div class="store-icon">${faceSVG(56)}</div>
+        <div class="store-icon">${faceSVG(84)}</div>
         <div class="store-name">
           <h1>Mapture</h1>
           <p class="store-dev">Oracle Inc.</p>
-          <p class="store-sub">Productivity · AI assistant</p>
+          <div class="store-action">
+            <button type="button" class="store-btn" data-ref="btn">GET</button>
+            <button type="button" class="store-ring" data-ref="ring" aria-label="Stop download" hidden>
+              <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+                <circle cx="15" cy="15" r="${RING_R}" fill="none" stroke="#D6DBE1" stroke-width="2.5"/>
+                <circle data-ref="arc" cx="15" cy="15" r="${RING_R}" fill="none" stroke="#0A7AFF" stroke-width="2.5" stroke-linecap="round"
+                        stroke-dasharray="${RING_LEN.toFixed(2)}" stroke-dashoffset="${RING_LEN.toFixed(2)}" transform="rotate(-90 15 15)"/>
+                <rect x="11" y="11" width="8" height="8" rx="1.5" fill="#0A7AFF"/>
+              </svg>
+            </button>
+            <span class="store-iap">In-App<br>Purchases</span>
+          </div>
         </div>
       </div>
-      <div class="store-stats">
-        <div><strong>4.8 ${ICON.star}</strong><span>2.1M reviews</span></div>
-        <div><strong>50M+</strong><span>Downloads</span></div>
-        <div><strong>12+</strong><span>Age rating</span></div>
+      <div class="store-info">
+        <div><span class="k">7.2M Ratings</span><b>4.9</b><span>★★★★★</span></div>
+        <div><span class="k">Age</span><b>12+</b><span>Years Old</span></div>
+        <div><span class="k">Chart</span><b>#1</b><span>Productivity</span></div>
+        <div><span class="k">Developer</span><b>${ICON.developer}</b><span>Oracle Inc.</span></div>
       </div>
-      <div class="store-action">
-        <button type="button" class="store-btn" data-ref="btn">Download</button>
-        <div class="store-progress" data-ref="progress" hidden>
-          <div class="store-bar"><i data-ref="fill"></i></div>
-          <span data-ref="pct">0%</span>
+      <section class="store-sec">
+        <h2>Events</h2>
+        <div class="store-event">
+          ${EVENT_MASCOT}
+          <span class="store-badge">NOW AVAILABLE</span>
+          <div class="store-event-text">
+            <span class="store-event-kicker">MAJOR UPDATE</span>
+            <b>Meet Mapture 6</b>
+            <span>Our most accurate predictions yet</span>
+          </div>
         </div>
-      </div>
-      <section class="store-about">
-        <h2>About this app</h2>
-        <p>Mapture predicts what happens next. It analyzes your behavioral patterns to answer any question about your future, with a probability you can act on.</p>
-        <div class="store-tags"><span>Prediction</span><span>Long-term simulation</span><span>Progress Updates</span></div>
       </section>
-      <div class="store-shots" aria-hidden="true">
-        <div class="store-shot"><span>Probability of Success</span><b>71.13%</b></div>
-        <div class="store-shot alt"><span>10-year outlook</span><b>See further.</b></div>
-      </div>
-    </main>`, hooks);
+      <section class="store-sec">
+        <h2>Preview</h2>
+        <div class="store-shots" aria-hidden="true">
+          ${shot('Know what<br>happens next', [['me', 70, 22], ['ai', 85, 50], ['me', 60, 22], ['ai', 85, 60]])}
+          ${shot('Every decision,<br>analyzed', [['ai', 90, 80], ['me', 65, 22], ['ai', 90, 40]])}
+          ${shot('', [['mid', 40, 40], ['bar', 70, 10], ['bar', 55, 10]])}
+        </div>
+      </section>
+    </main>
+    <nav class="store-tabs" aria-hidden="true">
+      <div>${ICON.today}<span>Today</span></div>
+      <div>${ICON.games}<span>Games</span></div>
+      <div class="on">${ICON.apps}<span>Apps</span></div>
+      <div>${ICON.search}<span>Search</span></div>
+    </nav>`, hooks);
 
   const q = (ref) => ov.el.querySelector(`[data-ref=${ref}]`);
   const btn = q('btn');
+  const ring = q('ring');
+  const arc = q('arc');
   const downloadMs = (Number(hooks.seconds) > 0 ? Number(hooks.seconds) : DEFAULT_DOWNLOAD_SECONDS) * 1000;
   let state = 'idle'; // idle → downloading → ready → launching
 
   btn.addEventListener('click', () => {
     if (state === 'idle') {
+      // GET → 버튼 자리에 원형 진행 링(가운데 정지 사각형). 퍼센트 숫자는 없다.
       state = 'downloading';
-      btn.disabled = true;
-      btn.textContent = 'Downloading…';
-      q('progress').hidden = false;
+      btn.hidden = true;
+      ring.hidden = false;
       const startedAt = performance.now();
       const tick = (now) => {
         if (!ov.alive()) return;
         const p = Math.min(1, (now - startedAt) / downloadMs);
-        // 실제 다운로드처럼 처음엔 빠르고 끝에서 살짝 느려진다
-        const eased = 1 - Math.pow(1 - p, 1.6);
-        q('fill').style.transform = `scaleX(${eased})`;
-        q('pct').textContent = `${Math.round(eased * 100)}%`;
+        // 처음 잠깐은 준비하듯 천천히, 그다음 꾸준히 차고 끝에서 살짝 느려진다
+        const eased = p < 0.12 ? p * 0.25 : 0.03 + (1 - Math.pow(1 - (p - 0.12) / 0.88, 1.5)) * 0.97;
+        arc.setAttribute('stroke-dashoffset', (RING_LEN * (1 - eased)).toFixed(2));
         if (p < 1) { requestAnimationFrame(tick); return; }
         state = 'ready';
-        q('progress').hidden = true;
-        btn.disabled = false;
-        btn.textContent = 'Open';
+        ring.hidden = true;
+        btn.hidden = false;
+        btn.textContent = 'OPEN';
       };
       requestAnimationFrame(tick);
     } else if (state === 'ready') {

@@ -1,5 +1,5 @@
 // 채팅 화면: 상단 바, 메시지 목록, 입력창(고스트 타이핑), 음성 모드
-import { mascotSVG } from '../mascot.js';
+import { mascotSVG, faceSVG } from '../mascot.js';
 import { isProgressUpdate } from '../engine.js';
 import { onLongPress } from '../longpress.js';
 
@@ -12,6 +12,7 @@ const ICON = {
   micBig: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A1D1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MIC_PATH}</svg>`,
   micSmall: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">${MIC_PATH}</svg>`,
   close: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A1D1C" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  dismiss: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6360" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   send: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
   // 로딩용 작은 마스코트: 얼굴 뒤에서 궤도 고리가 돈다
   spinner: `<svg class="spin-mascot" width="28" height="28" viewBox="0 0 120 120" aria-hidden="true">
@@ -27,6 +28,8 @@ const PILL_WAVES = '<svg viewBox="0 0 150 72" preserveAspectRatio="none" aria-hi
 
 const DEFAULT_TYPING_SPEED = 18; // 초당 글자 수
 const INPUT_MAX_HEIGHT = 132;
+const NEAR_BOTTOM_PX = 24;   // 맨 아래에서 이만큼 안이면 "맨 아래"로 본다 (Listening… 표시 판정)
+const NOTICE_LABEL = 'Current Probability of Success';
 
 function h(tag, className, text) {
   const el = document.createElement(tag);
@@ -72,6 +75,13 @@ export function createChat(root, hooks = {}) {
       </div>
     </div>
 
+    <div class="notice" data-ref="notice" hidden>
+      <div class="notice-icon">${faceSVG(32)}</div>
+      <div class="notice-head"><span class="notice-label" data-ref="noticeLabel"></span><span class="notice-sub" data-ref="noticeSub"></span></div>
+      <div class="notice-row"><span class="notice-value" data-ref="noticeValue"></span><span class="notice-delta" data-ref="noticeDelta"></span></div>
+      <button type="button" class="notice-x" data-ref="noticeX" aria-label="Dismiss">${ICON.dismiss}</button>
+    </div>
+
     <div class="voice-panel" data-ref="voice" hidden>
       <p class="voice-status" data-ref="voiceStatus">Listening…</p>
       <div class="voice-row">
@@ -91,11 +101,21 @@ export function createChat(root, hooks = {}) {
   let voiceOn = false;
   let listening = false; // 음성 모드 안에서 '듣는 중'인지 (질문이 올라가면 꺼지고, 알약을 누르면 다시 켜진다)
   let autoTimer = 0; // 음성 질문 자동 올리기(autoSubmit) 타이머
+  let noticeTimer = 0; // 공지 카드 닫힘 애니메이션
   /** 지금 기다리는 사용자 단계. { step, n, resolve } 또는 null */
   let pending = null;
 
   // ---------- 스크롤 ----------
   function scrollToBottom() { scroller.scrollTop = scroller.scrollHeight; }
+  const nearBottom = () => scroller.hidden || scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < NEAR_BOTTOM_PX;
+  // 듣는 중에 사용자가 위로 스크롤하면 Listening…만 숨긴다 (듣는 상태·물결·autoSubmit은 그대로). 맨 아래로 오면 다시 보인다.
+  scroller.addEventListener('scroll', () => refs.voice.classList.toggle('away', !nearBottom()), { passive: true });
+
+  /** 맵쳐가 답하는 동안(로딩 포함)은 사용자가 목록을 스크롤할 수 없다. 출력은 계속 맨 아래를 따라간다. */
+  function setBusy(on) {
+    scroller.classList.toggle('locked', !!on);
+    if (on) scrollToBottom();
+  }
   // 키보드가 열려 목록이 줄어들거나, 글자가 늘어 말풍선이 커질 때마다 맨 아래 유지
   if ('ResizeObserver' in window) {
     const ro = new ResizeObserver(scrollToBottom);
@@ -125,6 +145,8 @@ export function createChat(root, hooks = {}) {
     loadingEl = null;
     resetKeyState();
     setVoice(false);
+    setBusy(false);
+    hideNotice(false);
     messages.textContent = '';
     scroller.hidden = true;
     refs.empty.hidden = false;
@@ -190,6 +212,22 @@ export function createChat(root, hooks = {}) {
     return wrap;
   }
 
+  /**
+   * 비교 블록: 두 항목을 한 줄에 나란히(작은 라벨 + 큰 숫자), 아래에 작게 차이.
+   * { items: [{label, value}, {label, value}], diff: "Difference: 0.01 percentage points" }
+   */
+  function compareEl(cmp) {
+    const wrap = h('div', 'compare');
+    const row = wrap.appendChild(h('div', 'compare-row'));
+    for (const item of (cmp.items || []).slice(0, 2)) {
+      const cell = row.appendChild(h('div', 'compare-item'));
+      cell.appendChild(h('span', 'compare-label', item.label || ''));
+      cell.appendChild(h('span', 'compare-value', item.value ?? ''));
+    }
+    if (cmp.diff) wrap.appendChild(h('p', 'compare-diff', cmp.diff));
+    return wrap;
+  }
+
   /** 한 글자씩 출력. 끝까지 쓰면 true, 씬이 리셋되어 중단되면 false */
   function typeText(node, text, cps, ctl) {
     return new Promise((resolve) => {
@@ -242,6 +280,8 @@ export function createChat(root, hooks = {}) {
       const r = put(p, para);
       if (r !== true && !(await r)) return;
     }
+
+    if (step.compare) el.appendChild(compareEl(step.compare));
 
     for (const list of [].concat(step.list || [])) {
       if (list.title) {
@@ -317,12 +357,21 @@ export function createChat(root, hooks = {}) {
     listening = on; // 마이크로 들어오면 바로 듣는 중
     screen.classList.toggle('voice-on', on);
     refs.voice.hidden = !on;
-    if (on) input.blur();
+    if (on) { input.blur(); startListeningScroll(); }
     renderVoice();
+  }
+
+  // 듣기 시작: 맨 아래로 내려서 마지막 말풍선이 Listening… 바로 위에 오게 한다.
+  // (음성 모드에 들어가면 입력창이 빠지고 아래 여백이 바뀌므로 레이아웃이 잡힌 다음 프레임에 한 번 더)
+  function startListeningScroll() {
+    scrollToBottom();
+    refs.voice.classList.remove('away');
+    requestAnimationFrame(() => { scrollToBottom(); refs.voice.classList.remove('away'); });
   }
 
   function renderVoice() {
     refs.voice.classList.toggle('listening', voiceOn && listening);
+    screen.classList.toggle('listening', voiceOn && listening); // 화면 맨 아래의 은은한 초록은 듣는 중에만
     // 다음 음성 질문 차례인데 아직 알약을 누르지 않은 상태 (화면 표시는 같고, 확인 스크립트가 본다)
     refs.voice.classList.toggle('waiting', voiceOn && !listening && voicePending());
     refs.voiceStatus.textContent = voiceOn && listening ? 'Listening…' : '\u00A0';
@@ -354,14 +403,49 @@ export function createChat(root, hooks = {}) {
     if (!voiceOn) return;
     if (!listening) {
       // 대기 중: 알약(또는 왼쪽 마이크 버튼)을 눌러야 다시 듣기 시작한다. 다른 곳을 탭해도 아무 일 없다.
-      if (target.closest('.voice-pill, .voice-btn')) { listening = true; renderVoice(); }
+      if (target.closest('.voice-pill, .voice-btn')) { listening = true; startListeningScroll(); renderVoice(); }
       return;
     }
     if (!voicePending()) return;
     // 듣는 중: 상단 바와 말풍선 안의 버튼·링크는 제 기능을 한다. 그 밖의 어디를 탭해도 질문이 올라간다.
-    if (target.closest('.topbar, .bubble-btn, .report-link')) return;
+    if (target.closest('.topbar, .notice, .bubble-btn, .report-link')) return;
     finishPending();
   });
+
+  // ---------- 확률 공지 카드 (S09-Notice-Compact / Large) ----------
+  // 상단 바 바로 아래에 떠 있는 카드. 채팅 기록에는 남지 않는다. 떠 있는 동안은 목록 위쪽 여백을 카드 높이만큼 늘려
+  // 채팅 맨 위 내용이 카드에 가려지지 않게 한다.
+  function showNotice(n, drop) {
+    clearTimeout(noticeTimer);
+    const card = refs.notice;
+    card.classList.toggle('large', n.size === 'large');
+    card.classList.remove('closing', 'drop');
+    refs.noticeLabel.textContent = n.label || NOTICE_LABEL;
+    refs.noticeSub.textContent = n.sub || '';
+    refs.noticeSub.hidden = !n.sub;
+    refs.noticeValue.textContent = n.value ?? '';
+    const hasDelta = typeof n.up === 'boolean' || n.delta;
+    const up = n.up === true;
+    refs.noticeDelta.className = 'notice-delta ' + (up ? 'up' : 'down');
+    refs.noticeDelta.textContent = hasDelta ? `${up ? '▲' : '▼'}${n.delta ? ' ' + n.delta : ''}` : '';
+    card.hidden = false;
+    if (drop) { void card.offsetWidth; card.classList.add('drop'); }
+    const atBottom = nearBottom();
+    root.style.setProperty('--notice-space', `${card.offsetHeight + 8}px`);
+    if (atBottom) scrollToBottom();
+  }
+
+  function hideNotice(animate = true) {
+    clearTimeout(noticeTimer);
+    const card = refs.notice;
+    root.style.setProperty('--notice-space', '0px');
+    if (card.hidden) return;
+    if (!animate) { card.hidden = true; card.classList.remove('closing', 'drop'); return; }
+    card.classList.add('closing');
+    noticeTimer = setTimeout(() => { card.hidden = true; card.classList.remove('closing', 'drop'); }, 220);
+  }
+
+  refs.noticeX.addEventListener('click', () => hideNotice(true));
 
   // ---------- 고스트 타이핑 ----------
   // 어떤 키를 눌러도 정해진 문장이 한 글자씩 써진다. 백스페이스는 한 글자 지움.
@@ -526,6 +610,8 @@ export function createChat(root, hooks = {}) {
     hideLoading,
     awaitUser,
     scrollToBottom,
+    setBusy,
+    showNotice,
     setPlan(plan) { refs.plan.textContent = plan; },
   };
 }

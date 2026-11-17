@@ -63,7 +63,7 @@ python3 -m http.server 8000
 4. 확인할 것
    - DevTools → **Application** 탭 → **Manifest**: 이름·아이콘이 보이고 오류가 없는지
    - **Application → Service workers**: `sw.js`가 *activated and is running*인지
-   - **Application → Cache storage**: `mapture-v10`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
+   - **Application → Cache storage**: `mapture-v11`(현재 `CACHE_VERSION`)에 파일들이 들어 있는지
    - **Network** 탭에서 *Offline* 체크 후 새로고침 → 그래도 열리는지
 
 > 개발 중에는 **Application → Service workers → "Update on reload"**를 체크해 두면
@@ -133,16 +133,19 @@ python3 -m http.server 8000
 - **타이핑 씬:** 입력창을 탭해 키보드를 올리고 **아무 키나** 누르면 정해진 문장이 한 글자씩 써집니다.
   백스페이스는 한 글자 지움. 끝까지 쓰고 Send(또는 키보드의 보내기 키)를 누르면 질문이 올라갑니다.
   - 키보드가 **한글이든 영어든** 상관없습니다. 키를 한 번 누르면 한 글자가 써집니다.
-- **음성 씬:** 마이크 버튼을 탭하면 음성 모드(아래쪽이 초록빛으로 번지고 `Listening…`)가 됩니다.
+- **음성 씬:** 마이크 버튼을 탭하면 음성 모드가 됩니다. 입력창 대신 마이크·알약·X가 채팅 위에 떠 있고,
+  듣는 중에는 화면 맨 아래가 은은한 초록빛이 되며 알약 바로 위에 `Listening…`이 뜹니다 (맨 아래로 자동 스크롤).
+  듣는 중에 위로 스크롤하면 `Listening…`만 숨고 듣기는 계속됩니다. 맵쳐가 답하는 동안은 스크롤이 잠깁니다.
   그 상태에서 **화면 아무 곳이나 한 번 더 탭**하면 질문이 올라가고 답변이 이어집니다.
   `scenes.json`에서 그 질문에 `autoSubmit`(초)을 적어 두면 탭하지 않아도 그 시간 뒤에 저절로 올라갑니다.
   - 질문이 올라간 뒤에는 음성 모드가 **대기 상태**(알약이 멈추고 `Listening…`이 사라짐)가 됩니다.
     다음 질문은 **알약을 탭**해야 다시 듣기 시작합니다. 그 뒤는 같습니다 (탭하거나 `autoSubmit` 시간 뒤 올라감).
   - X를 누르면 일반 입력창으로 돌아갑니다.
 - **답변 출력 중** 말풍선을 탭하면 남은 글자가 즉시 전부 표시됩니다.
-- **S#4:** 스토어 화면 → `Download`(3초, `downloadSeconds`로 조절) → `Open` → 스토어 카드가 왼쪽으로 밀려 나가고, 마스코트가 보이는 맵쳐 카드가 들어와 전체 화면으로 커짐 → 바로 인사 화면 (약 1초). 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
+- **S#4:** iPhone 앱 스토어 구조의 스토어 화면 → `GET` → 원형 진행 링(4초, `downloadSeconds`로 조절) → `OPEN` → 스토어 카드가 왼쪽으로 밀려 나가고, 마스코트가 보이는 맵쳐 카드가 들어와 전체 화면으로 커짐 → 바로 인사 화면 (약 1초). 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
 - **결제:** 요금 카드를 탭해 고르고 `Subscribe for …` → 완료 화면 → `Start predicting`. 이후 상단 플랜이 `Premium`으로 바뀝니다.
 - **리포트:** 답변 아래 `Detailed Analysis Report ›`를 탭. 왼쪽 위 뒤로 가기로 같은 대화로 돌아옵니다.
+- **확률 공지 카드:** S#9는 처음부터, S#13은 씬 시작 1초 뒤 상단 바 아래에 카드가 내려옵니다. X로 닫을 수 있고 채팅 기록에는 남지 않습니다.
 - **이어지는 대화:** 씬을 고르면 앞 씬들의 대화가 위에 이어 붙은 채로 열립니다 (같은 대화창처럼). 날짜가 다른 씬은 시간 구분선으로 구분됩니다.
 - 씬별 동작 순서와 맞출 폰 시각은 **`docs/cue-sheet.md`** 에 있습니다.
 - 개발용: 주소 뒤에 `?scene=S08`을 붙이면 그 씬으로 바로 시작합니다. `&solo=1`을 더하면 앞 씬 대화 없이 그 씬만 엽니다.
@@ -166,7 +169,11 @@ Android 뒤로 가기로 앱이 닫히는 것, 번역 제안, 자동 다크 모�
 - `gap`: 앞 씬으로부터 지난 시간 (`"30m"`, `"3h"`, `"2d"`, `"1w"`, `"2y"`). 앞 씬 대화의 시간 구분선이 그만큼 과거로 표시됩니다
   (`Yesterday 9:22 PM` → `Mon 9:22 PM` → `Nov 3 9:22 PM` → `Nov 16, 2024 9:22 PM`).
   분·시간 단위는 **같은 날**이라는 뜻이라 자정 직후에 촬영해도 `Today`로 남습니다. 날짜를 넘기려면 `d`·`w`·`y`를 쓰세요.
-- `downloadSeconds`: 스토어 화면의 다운로드 진행 시간 (기본 3초)
+- `downloadSeconds`: 스토어 화면의 다운로드 진행 링이 차는 시간 (기본 4초)
+- `notice`: 상단 바 아래에 떠 있는 확률 공지 카드. 있을 때만 표시되고 채팅 기록에는 남지 않습니다.
+  `{"value":"71.23%","delta":"0.10","up":true,"size":"compact","appear":"start"}`.
+  `size`는 `compact`(기본) / `large`(숫자만 크게), `appear`는 `start`(씬 시작부터, 기본) / `drop`(씬 시작 1초 뒤 위에서 내려옴, `delay`초로 조절).
+  `label`(기본 `Current Probability of Success`), `sub`(large에서 문구 아래 작은 글, 예: `Updated 2 min ago`)도 쓸 수 있습니다.
 - `phoneTime`: 촬영 때 맞출 폰 시각. 앱은 쓰지 않고 큐시트에만 나옵니다.
 - `history`: 이 씬에만 미리 깔아 둘 메시지 (앞 씬 대화 다음에 즉시 표시)
 - `steps`: 순서대로 재생
@@ -188,6 +195,8 @@ Android 뒤로 가기로 앱이 닫히는 것, 번역 제안, 자동 다크 모�
 - `headline`: `{"label":"...","value":"71.13%","delta":"0.08","up":false,"size":"normal"}`.
   `size`는 `normal`/`huge`. `up`이 `true`면 ▲(파랑), `false`면 ▼(주황), `up`과 `delta`를 둘 다 빼면 화살표 없음.
 - `body`: 본문. 빈 줄(`\n\n`)로 문단을 나눌 수 있음.
+- `compare`: 두 항목을 한 줄에 나란히 보여 주는 비교 블록 (본문 바로 아래).
+  `{"items":[{"label":"AI Workflow Development","value":"70.98%"},{"label":"Introduction to New Media","value":"70.97%"}],"diff":"Difference: 0.01 percentage points"}`
 - `list`: `[{"title":"Recommended","items":["...","..."]}, ...]`
 - `disclaimer`, `button`(`{"label":"...","action":"paywall"}`: 누르면 결제 화면)
 - `report`: `{"question":"...","askedAt":"now","items":[{"time":"+17m","event":"...","prob":"99.1%"}],"basedOn":["..."]}`.

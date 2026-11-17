@@ -18,7 +18,7 @@
       ]
     },
     {
-      "id": "S04", "title": "S#4 Café — first use", "start": "download", "plan": "Free", "profile": "E", "phoneTime": "9:22 PM", "downloadSeconds": 3,
+      "id": "S04", "title": "S#4 Café — first use", "start": "download", "plan": "Free", "profile": "E", "phoneTime": "9:22 PM", "downloadSeconds": 4,
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -100,11 +100,8 @@
       ]
     },
     {
-      "id": "S09", "title": "S#9 Study room", "start": "chat", "plan": "Premium", "profile": "E", "after": "S08", "gap": "4d",
-      "history": [
-        {"type": "divider", "time": "-2h"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "71.23%"}}
-      ],
+      "id": "S09", "title": "S#9 Study room", "start": "chat", "plan": "Premium", "profile": "E", "after": "S08", "gap": "4d", "notice": {"value": "71.23%", "delta": "0.10", "up": true, "size": "compact"},
+      "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
         {"type": "user", "input": "typing", "text": "What should I do when I can't concentrate?"},
@@ -128,48 +125,33 @@
       "steps": [
         {"type": "divider", "time": "now"},
         {"type": "user", "input": "typing", "text": "Compare my probability of success if I take Introduction to New Media instead of AI Workflow Development this semester."},
-        {"type": "mapture", "loading": {"seconds": 1.5, "text": "One moment, please…"}, "body": "Based on an analysis of your records, your probability of success would be 70.98% if you take AI Workflow Development this semester, and 70.97% if you take Introduction to New Media!"}
+        {"type": "mapture", "loading": {"seconds": 1.5, "text": "One moment, please…"}, "body": "Here's how your probability of success compares for this semester!", "compare": {"items": [{"label": "AI Workflow Development", "value": "70.98%"}, {"label": "Introduction to New Media", "value": "70.97%"}], "diff": "Difference: 0.01 percentage points"}, "note": "[TODO: 작가 확인] 짧은 한 문장 + 비교 블록 형식 초안. 원래 문장: Based on an analysis of your records, your probability of success would be 70.98% if you take AI Workflow Development this semester, and 70.97% if you take Introduction to New Media!"}
       ]
     },
     {
-      "id": "S13a", "title": "S#13 Montage — cut a (69.53%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S11", "gap": "3w",
+      "id": "S13a", "title": "S#13 Montage — cut a (69.53%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S11", "gap": "3w", "notice": {"value": "69.53%", "delta": "1.45", "up": false, "appear": "drop"},
       "history": [],
-      "steps": [
-        {"type": "divider", "time": "now"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "69.53%", "delta": "1.45", "up": false}, "delay": 1.5}
-      ]
+      "steps": []
     },
     {
-      "id": "S13b", "title": "S#13 Montage — cut b (73.22%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13a", "gap": "3w",
+      "id": "S13b", "title": "S#13 Montage — cut b (73.22%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13a", "gap": "3w", "notice": {"value": "73.22%", "delta": "3.69", "up": true, "appear": "drop"},
       "history": [],
-      "steps": [
-        {"type": "divider", "time": "now"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "73.22%", "delta": "3.69", "up": true}, "delay": 1.5}
-      ]
+      "steps": []
     },
     {
-      "id": "S13c", "title": "S#13 Montage — cut c (72.88%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13b", "gap": "3w",
+      "id": "S13c", "title": "S#13 Montage — cut c (72.88%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13b", "gap": "3w", "notice": {"value": "72.88%", "delta": "0.34", "up": false, "appear": "drop"},
       "history": [],
-      "steps": [
-        {"type": "divider", "time": "now"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "72.88%", "delta": "0.34", "up": false}, "delay": 1.5}
-      ]
+      "steps": []
     },
     {
-      "id": "S13d", "title": "S#13 Montage — cut d (73.39%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13c", "gap": "3w",
+      "id": "S13d", "title": "S#13 Montage — cut d (73.39%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13c", "gap": "3w", "notice": {"value": "73.39%", "delta": "0.51", "up": true, "appear": "drop"},
       "history": [],
-      "steps": [
-        {"type": "divider", "time": "now"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "73.39%", "delta": "0.51", "up": true}, "delay": 1.5}
-      ]
+      "steps": []
     },
     {
-      "id": "S13e", "title": "S#13 Montage — cut e (74.11%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13d", "gap": "3w",
+      "id": "S13e", "title": "S#13 Montage — cut e (74.11%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13d", "gap": "3w", "notice": {"value": "74.11%", "delta": "0.72", "up": true, "appear": "drop", "note": "[TODO: 작가 확인] 대본은 ▼인데 숫자는 73.39 → 74.11로 오름. 지금은 ▲ 0.72로 표시"},
       "history": [],
-      "steps": [
-        {"type": "divider", "time": "now"},
-        {"type": "mapture", "headline": {"label": "Progress Update", "value": "74.11%", "delta": "0.72", "up": true}, "delay": 1.5, "note": "[TODO: 작가 확인] 대본은 ▼인데 숫자는 73.39 → 74.11로 오름. 지금은 ▲ 0.72로 표시"}
-      ]
+      "steps": []
     },
     {
       "id": "S14", "title": "S#14 Café — two years later", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13e", "gap": "2y",

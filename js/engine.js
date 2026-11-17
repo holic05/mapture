@@ -6,6 +6,7 @@ const DEFAULT_LOADING_TEXT = 'One moment, please…';
 const DEFAULT_LOADING_SECONDS = 2;
 const PAUSE_BEFORE_LOADING_MS = 350; // 질문이 올라간 뒤 로딩이 뜨기까지 잠깐의 숨
 const PROGRESS_DELAY_SECONDS = 0.8;  // Progress Update가 도착하기 전 기본 대기
+const NOTICE_DROP_SECONDS = 1;       // 공지 카드 appear: "drop" — 씬 시작 후 이만큼 뒤에 위에서 내려온다
 
 /** headline만 있고 body·list가 없는 맵쳐 메시지 = Progress Update */
 export function isProgressUpdate(step) {
@@ -109,6 +110,18 @@ export class Engine {
     }
     this.view.scrollToBottom();
 
+    // 확률 공지 카드: 씬 시작부터 떠 있거나(기본), 잠시 뒤 위에서 내려온다(appear: "drop")
+    const notice = scene.notice;
+    if (notice) {
+      if (notice.appear === 'drop') {
+        this.sleep((notice.delay ?? NOTICE_DROP_SECONDS) * 1000).then(() => {
+          if (this.alive(gen)) this.view.showNotice(notice, true);
+        });
+      } else {
+        this.view.showNotice(notice, false);
+      }
+    }
+
     this.run(gen);
   }
 
@@ -139,17 +152,20 @@ export class Engine {
       if (step.type === 'divider') {
         this.pendingDivider = step;
       } else if (step.type === 'user') {
-        // 사용자 동작(Send / 마이크)을 기다린다
+        // 사용자 동작(Send / 마이크)을 기다린다. 기다리는 동안은 목록을 스크롤할 수 있다.
+        this.view.setBusy(false);
         await this.view.awaitUser(step);
         if (!alive()) return;
         this.flushDivider();
         this.view.addUser(step.text, { voice: step.input === 'voice', live: true });
       } else if (step.type === 'mapture') {
+        this.view.setBusy(true); // 맵쳐가 답하는 동안(대기·로딩 포함)은 스크롤 잠금
         await this.playMapture(step, alive);
         if (!alive()) return;
       }
       this.index++;
     }
+    this.view.setBusy(false);
   }
 
   async playMapture(step, alive) {

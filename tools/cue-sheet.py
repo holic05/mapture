@@ -16,7 +16,7 @@ DEFAULT_LOADING_S = 2.0
 PAUSE_BEFORE_LOADING_S = 0.35
 PROGRESS_DELAY_S = 0.8
 DEFAULT_TYPING_CPS = 18
-DEFAULT_DOWNLOAD_S = 3
+DEFAULT_DOWNLOAD_S = 4
 OPEN_MOTION_S = 1.0   # 카드 전환 0.56 + 잠깐 머묾 0.22 + 인사 화면으로 넘어가기 0.26
 PAY_PROCESSING_S = 0.8
 
@@ -87,6 +87,10 @@ def mapture_row(step):
     if step.get("body"):
         body = step["body"] if isinstance(step["body"], str) else " ".join(step["body"])
         parts.append(esc(body))
+    cmp = step.get("compare")
+    if cmp:
+        cells = " │ ".join(f"{esc(i.get('label', ''))} **{esc(i.get('value', ''))}**" for i in cmp.get("items", []))
+        parts.append(f"[비교: {cells}]" + (f" <sub>{esc(cmp['diff'])}</sub>" if cmp.get("diff") else ""))
     for lst in lists_of(step):
         parts.append(f"*{esc(lst.get('title', ''))}*: " + " / ".join(esc(i) for i in lst.get("items", [])))
     if step.get("disclaimer"):
@@ -136,6 +140,15 @@ def scene_section(scene, by_id):
     else:
         shows = any(st["type"] == "divider" and st.get("time") == "now" for st in steps)
         out.append("- **맞출 폰 시각:** 정해진 값 없음" + (" (구분선에 촬영 순간의 실제 시각이 `Today h:mm`으로 찍힘 → 극 중 시간대에 맞추면 좋음)" if shows else ""))
+    nt = scene.get("notice")
+    if nt:
+        arrow = ""
+        if isinstance(nt.get("up"), bool) or nt.get("delta"):
+            arrow = (" ▲" if nt.get("up") else " ▼") + (f" {nt['delta']}" if nt.get("delta") else "")
+        when = (f"씬 시작 {nt.get('delay', 1):g}초 뒤 위에서 내려옴" if nt.get("appear") == "drop" else "씬 시작부터 떠 있음")
+        size = "큰 숫자" if nt.get("size") == "large" else "기본 크기"
+        out.append(f"- **공지 카드:** `{esc(nt.get('label') or 'Current Probability of Success')}` **{esc(nt.get('value', ''))}{arrow}** "
+                   f"({when}, {size}, X로 닫힘, 채팅 기록에는 남지 않음)")
     if chain:
         out.append(f"- **앞 씬({chain[-1]['id']})으로부터:** {gap_ko(scene.get('gap'))} 뒤 → 앞 씬 대화의 구분선이 그만큼 과거 날짜로 표시됨")
 
@@ -143,8 +156,8 @@ def scene_section(scene, by_id):
     rows, total, n = [], 0.0, 0
     if start == "download":
         ds = scene.get("downloadSeconds", DEFAULT_DOWNLOAD_S)
-        n += 1; rows.append((n, "`Download` 탭", f"진행 바가 {ds:g}초 동안 참 → 버튼이 `Open`으로", f"{ds:g}초"))
-        n += 1; rows.append((n, "`Open` 탭", "스토어 카드가 왼쪽으로 밀려 나가고, 마스코트가 보이는 맵쳐 카드가 들어와 전체 화면으로 커짐 → 바로 인사 화면", f"약 {OPEN_MOTION_S:g}초"))
+        n += 1; rows.append((n, "`GET` 탭", f"버튼 자리에 원형 진행 링이 {ds:g}초 동안 참 → 버튼이 `OPEN`으로", f"{ds:g}초"))
+        n += 1; rows.append((n, "`OPEN` 탭", "스토어 카드가 왼쪽으로 밀려 나가고, 마스코트가 보이는 맵쳐 카드가 들어와 전체 화면으로 커짐 → 바로 인사 화면", f"약 {OPEN_MOTION_S:g}초"))
         total += ds + OPEN_MOTION_S
     if start == "paywall":
         n += 1; rows.append((n, "요금 카드 탭해 선택 (기본: One-Year)", "`Mapture Premium` 결제 화면, 버튼 `Subscribe for ₩250,000` / `₩22,900`", ""))
@@ -190,9 +203,9 @@ def scene_section(scene, by_id):
         out.append("")
         out.append(f"자동으로 진행되는 시간 합계: 약 {total:.0f}초 (배우 동작 시간 제외)")
     else:
-        out.append("\n진행 단계 없음: 화면을 보여 주거나 스크롤만 하는 씬.")
+        out.append("\n진행 단계 없음: 화면을 보여 주거나 스크롤만 하는 씬." + (" (공지 카드만 표시)" if nt else ""))
 
-    notes = [st["note"] for st in (scene.get("history") or []) + steps if "TODO" in str(st.get("note", ""))]
+    notes = [st["note"] for st in (scene.get("history") or []) + steps + ([nt] if nt else []) if "TODO" in str(st.get("note", ""))]
     if notes:
         out.append("\n확인 필요:")
         out.extend(f"- {esc(x)}" for x in dict.fromkeys(notes))

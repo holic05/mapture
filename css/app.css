@@ -15,6 +15,13 @@
 
   --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --text-scale: 1; /* 씬의 textScale (S#10은 1.3) */
+
+  --top-h: calc(64px + env(safe-area-inset-top)); /* 상단 바 높이 */
+  --top-fade: 46px;      /* 상단 바 아래로 말풍선이 흰색으로 흐려지는 구간 */
+  --notice-space: 0px;   /* 공지 카드가 떠 있을 때 목록 위쪽에 더 비우는 높이 (js가 넣는다) */
+  /* 음성 모드: 떠 있는 컨트롤(알약 72px + 위아래 여백)과 Listening… 줄이 차지하는 아래쪽 높이 */
+  --voice-bar: calc(112px + env(safe-area-inset-bottom));
+  --voice-space: calc(144px + env(safe-area-inset-bottom));
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -67,14 +74,25 @@ a { color: var(--accent); }
   overflow: hidden;
 }
 
-/* ===== 상단 바 ===== */
+/* ===== 상단 바 =====
+   메시지 목록은 상단 바 뒤까지 이어지고, 상단 바 밑으로 들어가는 말풍선은 흰색으로 흐려진다. */
 .topbar {
+  position: relative;
+  z-index: 3;
   flex: none;
   height: calc(64px + env(safe-area-inset-top));
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+}
+.topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 calc(-1 * var(--top-fade)) 0;
+  z-index: -1;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF calc(100% - var(--top-fade)), rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
 }
 
 .icon-btn {
@@ -114,10 +132,12 @@ a { color: var(--accent); }
 }
 .title-btn .plan { font-weight: 500; color: var(--muted); }
 
-/* ===== 메시지 영역 ===== */
+/* ===== 메시지 영역 =====
+   상단 바 뒤에서 시작한다(margin-top 음수). 그래서 위쪽 여백에 상단 바 높이를 더한다. */
 .chat-main {
   flex: 1;
   min-height: 0;
+  margin-top: calc(-1 * var(--top-h));
   position: relative;
   display: flex;
   flex-direction: column;
@@ -132,7 +152,7 @@ a { color: var(--accent); }
   flex-direction: column;
   justify-content: flex-end;
   gap: 12px;
-  padding: 8px 16px 12px;
+  padding: calc(var(--top-h) + 8px + var(--notice-space)) 16px 12px;
   overflow: hidden;
 }
 .empty[hidden] { display: none; }
@@ -176,14 +196,19 @@ a { color: var(--accent); }
   scrollbar-width: none;
 }
 .scroller::-webkit-scrollbar { display: none; }
+/* 맵쳐가 답하는 동안은 사용자 스크롤 잠금 (js의 setBusy). 출력은 코드가 맨 아래로 따라간다. */
+.scroller.locked { overflow-y: hidden; touch-action: none; }
 .scroller[hidden] { display: none; }
 .messages {
   margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 8px 16px 12px;
+  padding: calc(var(--top-h) + 8px + var(--notice-space)) 16px 12px;
 }
+/* 음성 모드: 목록이 화면 맨 아래까지 이어지고 컨트롤 뒤로 지나간다.
+   맨 아래로 스크롤했을 때 마지막 말풍선이 Listening… 위에서 끝나도록 아래 여백을 둔다. */
+.voice-on .messages { padding-bottom: var(--voice-space); }
 
 .msg.live { animation: msg-in .22s ease-out both; }
 @keyframes msg-in {
@@ -265,6 +290,31 @@ a { color: var(--accent); }
 }
 .disclaimer { font-size: calc(12px * var(--text-scale)); line-height: 1.45; color: var(--muted); }
 
+/* 비교 블록: 두 항목을 한 줄에 나란히 (S#11) */
+.compare { display: flex; flex-direction: column; gap: 8px; }
+.compare-row { display: flex; gap: 10px; }
+.compare-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 10px 12px 12px;
+}
+.compare-label { font-size: calc(12px * var(--text-scale)); font-weight: 600; line-height: 1.3; color: var(--muted); }
+.compare-value {
+  margin-top: auto;
+  font-size: min(calc(28px * var(--text-scale)), 7.6vw);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bubble-mapture .compare-diff { font-size: calc(12px * var(--text-scale)); color: var(--muted); text-align: center; }
+
 .bubble-btn {
   align-self: flex-start;
   border: 0;
@@ -317,6 +367,7 @@ a { color: var(--accent); }
 
 /* ===== 입력창 ===== */
 .composer-wrap {
+  position: relative;
   flex: none;
   padding: 8px 12px 28px;
   transition: padding-bottom .15s;
@@ -461,46 +512,67 @@ a { color: var(--accent); }
 }
 .fatal strong { display: block; font-size: 26px; margin-bottom: 12px; }
 
-/* ===== 음성 모드 (S04-Voice) =====
-   채팅 목록은 그대로 보이고, 화면 아래쪽에서 accent 색이 번져 올라온다. */
+/* ===== 음성 모드 (Voice-1~4 목업) =====
+   하단 박스 없이 마이크·알약·X가 채팅 위에 떠 있다(버튼은 불투명). 채팅은 화면 맨 아래까지 이어진다.
+   듣는 중에만 화면 맨 아래가 은은한 초록이고, 대기·맵쳐 출력 중에는 흰색. 컨트롤 위치·크기는 모든 상태에서 같다. */
 .screen.chat { position: relative; }
 .screen.chat::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 55%, #CFEAE5 85%, #A9DBD2 100%);
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 70%, #DDF1EC 90%, #C3E6DE 100%);
   opacity: 0;
   transition: opacity .35s ease;
   pointer-events: none;
 }
-.screen.chat.voice-on::before { opacity: 1; }
-.screen.chat > * { position: relative; }
+.screen.chat.voice-on.listening::before { opacity: 1; }
 .voice-on .composer-wrap { display: none; }
 .voice-panel {
-  flex: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 8px 20px 36px;
-  animation: msg-in .25s ease-out both;
+  pointer-events: none; /* 컨트롤 사이 빈 곳은 뒤의 목록을 스크롤할 수 있게 */
+  animation: fade-in .25s ease-out both;
 }
 .voice-panel[hidden] { display: none; }
-.voice-status { margin: 0; font-size: 13px; font-weight: 500; color: var(--accent-dark); }
-.voice-row { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+.voice-status {
+  margin: 0;
+  height: 16px;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--accent-dark);
+  visibility: hidden;
+}
+.voice-panel.listening:not(.away) .voice-status { visibility: visible; }
+.voice-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px calc(28px + env(safe-area-inset-bottom));
+}
 .voice-btn {
   width: 56px;
   height: 56px;
   border-radius: 28px;
-  border: 1px solid #B9DCD5;
-  background: var(--accent-soft);
+  border: 1px solid var(--line);
+  background: var(--bubble);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   flex: none;
   touch-action: manipulation;
+  pointer-events: auto;
+  transition: background-color .3s, border-color .3s;
 }
+.voice-panel.listening .voice-btn { border-color: #B9DCD5; background: var(--accent-soft); }
 .voice-pill {
   position: relative;
   width: min(150px, 40vw);
@@ -508,10 +580,11 @@ a { color: var(--accent); }
   border-radius: 36px;
   overflow: hidden;
   background: #FFFFFF;
-  box-shadow: 0 8px 28px rgba(15, 123, 108, 0.35);
-  opacity: .75;
-  transition: opacity .3s;
+  border: 1px solid var(--divider);
+  pointer-events: auto;
+  transition: box-shadow .3s, border-color .3s;
 }
+.voice-panel.listening .voice-pill { border-color: transparent; box-shadow: 0 8px 28px rgba(15, 123, 108, 0.30); }
 /* 알약 안의 초록 물결: 낮은 물결 세 겹이 서로 다른 속도·방향으로 흐르고, 각자 다른 박자로 조금씩 오르내린다.
    세 겹은 일부러 어긋나게 맞췄다: 흐르는 주기 12초·7.5초(반대 방향)·5초, 시작 위치도 제각각,
    오르내림은 3.7초·5.9초·4.6초이고 가운데 겹은 반대로 움직인다. 그래서 같은 모양이 되풀이되어 보이지 않는다.
@@ -530,12 +603,78 @@ a { color: var(--accent); }
 .voice-pill .wave-3 { animation-duration: 5s; animation-delay: -0.8s; }
 .voice-pill .wave-3 path { animation-duration: 4.6s; animation-delay: -1.7s; }
 .voice-pill .wave, .voice-pill .wave path { animation-play-state: paused; }
-.voice-panel.listening .voice-pill { opacity: 1; }
+/* 대기·출력 중: 물결이 멈추고 옅어진다 (알약 자체는 불투명한 흰색 그대로) */
+.voice-pill svg { opacity: .55; transition: opacity .3s; }
+.voice-panel.listening .voice-pill svg { opacity: 1; }
 .voice-panel.listening .voice-pill .wave,
 .voice-panel.listening .voice-pill .wave path { animation-play-state: running; }
 @keyframes pill-drift { from { transform: translateX(0); } to { transform: translateX(-150px); } }
 @keyframes pill-swell { from { transform: translateY(-1.6px); } to { transform: translateY(1.8px); } }
 @keyframes pill-swell-wide { from { transform: translateY(-2.6px); } to { transform: translateY(2.4px); } }
+
+/* ===== 확률 공지 카드 (S09-Notice-Compact / Large) =====
+   상단 바 바로 아래에 떠 있다. compact: 아이콘 · 문구+숫자 · X 한 줄 / large: 숫자만 크게 아래 줄에. */
+.notice {
+  position: absolute;
+  top: calc(var(--top-h) + 4px);
+  left: 12px;
+  right: 12px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 44px;
+  grid-template-areas: "icon head x" "icon row x";
+  align-items: center;
+  column-gap: 12px;
+  padding: 12px 8px 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(26, 29, 28, 0.14);
+}
+.notice[hidden] { display: none; }
+.notice-icon { grid-area: icon; display: flex; }
+.notice-icon svg { width: 32px; height: 32px; }
+.notice-head { grid-area: head; align-self: end; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.notice-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.notice-sub { font-size: 12px; color: var(--muted); }
+.notice-sub[hidden] { display: none; }
+.notice-row { grid-area: row; align-self: start; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
+.notice-value { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.notice-delta { font-size: 15px; font-weight: 600; }
+.notice-delta.up { color: var(--up); }
+.notice-delta.down { color: var(--down); }
+.notice-x {
+  grid-area: x;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+.notice.large {
+  grid-template-columns: 28px minmax(0, 1fr) 44px;
+  grid-template-areas: "icon head x" "row row row";
+  align-items: start;
+  column-gap: 10px;
+  row-gap: 4px;
+  padding: 16px 18px 18px;
+  border-radius: 20px;
+}
+.notice.large .notice-icon svg { width: 28px; height: 28px; }
+.notice.large .notice-head { align-self: start; }
+.notice.large .notice-label { letter-spacing: 0.06em; text-transform: uppercase; }
+.notice.large .notice-x { margin: -8px -8px 0 0; }
+.notice.large .notice-row { padding-left: 38px; gap: 0 12px; }
+.notice.large .notice-value { font-size: min(56px, 14.4vw); line-height: 1.05; }
+.notice.large .notice-delta { font-size: 18px; }
+.notice.drop { animation: notice-drop .5s cubic-bezier(.2, .8, .25, 1) both; }
+.notice.closing { animation: notice-close .22s ease-in both; }
+@keyframes notice-drop { from { transform: translateY(calc(-100% - var(--top-h))); opacity: 0; } 40% { opacity: 1; } }
+@keyframes notice-close { to { transform: translateY(-16px); opacity: 0; } }
 
 /* ===== 채팅 위를 덮는 전체 화면 (다운로드·결제·리포트) ===== */
 .overlay {
@@ -568,88 +707,195 @@ a { color: var(--accent); }
   color: var(--muted);
 }
 
-/* ----- ① 다운로드 페이지 ----- */
-.overlay-download { animation: none; }
+/* ----- ① 다운로드 페이지 (Store-1~3 목업: iPhone 앱 스토어의 앱 상세 화면 구조) ----- */
+.overlay-download {
+  animation: none;
+  --ios-ink: #1C1C1E;
+  --ios-gray: #8A8F98;
+  --ios-line: #E5E5EA;
+  --ios-blue: #3B87F5;
+  color: var(--ios-ink);
+}
+.store-top {
+  flex: none;
+  height: calc(56px + env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(6px + env(safe-area-inset-top)) 16px 6px;
+}
+.store-round {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  border: 1px solid var(--ios-line);
+  background: #FFFFFF;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
 .store {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding: 8px 20px 28px;
-  scrollbar-width: none;
+  gap: 18px;
+  padding: 6px 20px 0;
 }
-.store::-webkit-scrollbar { display: none; }
-.store-head { display: flex; align-items: center; gap: 16px; }
+.store-head { display: flex; gap: 16px; align-items: stretch; flex: none; }
 .store-icon {
   flex: none;
-  width: 80px;
-  height: 80px;
-  border-radius: 20px;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  width: 112px;
+  height: 112px;
+  border-radius: 26px;
+  background: var(--accent-soft);
+  border: 1px solid var(--avatar);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.store-name { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.store-name h1 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+.store-name { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.store-name h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
 .store-name p { margin: 0; }
-.store-dev { font-size: 15px; font-weight: 600; color: var(--accent); }
-.store-sub { font-size: 12px; color: var(--muted); }
-.store-stats { display: flex; align-items: stretch; }
-.store-stats > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 4px;
-  border-left: 1px solid var(--line);
-}
-.store-stats > div:first-child { border-left: 0; }
-.store-stats strong { display: flex; align-items: center; gap: 3px; font-size: 14px; font-weight: 600; }
-.store-stats span { font-size: 12px; color: var(--muted); white-space: nowrap; }
-.store-action { display: flex; flex-direction: column; gap: 12px; }
+.store-dev { font-size: 15px; color: var(--ios-gray); }
+.store-action { margin-top: auto; display: flex; align-items: center; gap: 10px; min-height: 34px; }
 .store-btn {
-  height: 48px;
+  height: 31px;
+  min-width: 74px;
+  padding: 0 20px;
   border: 0;
-  border-radius: 24px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 16px;
+  border-radius: 16px;
+  background: var(--ios-blue);
+  color: #FFFFFF;
+  font-size: 15px;
   font-weight: 600;
   touch-action: manipulation;
 }
-.store-btn:active { background: var(--accent-dark); }
-.store-btn:disabled { background: var(--accent-soft); color: var(--accent-dark); }
-.store-progress { display: flex; align-items: center; gap: 12px; }
-.store-progress[hidden] { display: none; }
-.store-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--divider); overflow: hidden; }
-.store-bar i { display: block; height: 100%; background: var(--accent); transform-origin: left center; transform: scaleX(0); }
-.store-progress span { flex: none; width: 38px; text-align: right; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.store-about { display: flex; flex-direction: column; gap: 10px; }
-.store-about h2 { margin: 0; font-size: 17px; font-weight: 600; }
-.store-about p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
-.store-tags, .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.store-tags span, .chips span { font-size: 13px; border: 1px solid var(--divider); border-radius: 14px; padding: 5px 12px; }
-.store-shots { display: flex; gap: 12px; }
+.store-btn[hidden], .store-ring[hidden] { display: none; }
+.store-ring {
+  width: 74px; /* GET 버튼과 같은 폭을 차지해 옆 글자가 움직이지 않게 */
+  height: 34px;
+  border: 0;
+  background: transparent;
+  padding: 0 0 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.store-iap { font-size: 10px; line-height: 1.2; color: var(--ios-gray); }
+/* 정보 줄: 옆으로 넘기는 줄처럼 네 번째 칸이 오른쪽 끝에서 잘린다 */
+.store-info {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  margin-right: -80px;
+  padding: 12px 0;
+  border-top: 1px solid var(--ios-line);
+  border-bottom: 1px solid var(--ios-line);
+}
+.store-info > div {
+  flex: 0 0 calc((100vw - 40px) / 3.35);
+  max-width: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  border-left: 1px solid var(--ios-line);
+  white-space: nowrap;
+}
+.store-info > div:first-child { border-left: 0; }
+.store-info .k { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ios-gray); }
+.store-info b { height: 24px; display: flex; align-items: center; font-size: 19px; font-weight: 700; color: #6B7079; }
+.store-info > div > span:last-child { font-size: 11px; color: var(--ios-gray); }
+.store-sec { flex: none; display: flex; flex-direction: column; gap: 10px; }
+.store-sec h2 { margin: 0; font-size: 22px; font-weight: 700; }
+.store-event {
+  position: relative;
+  height: 210px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0F7B6C 0%, #0A5A4F 70%, #083F38 100%);
+}
+.store-event-mascot { position: absolute; right: -14px; top: -6px; opacity: .95; }
+.store-badge {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  background: #F3F9E8;
+  border-radius: 12px;
+  padding: 5px 10px;
+}
+.store-event-text { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 3px; color: #FFFFFF; }
+.store-event-kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; opacity: .8; }
+.store-event-text b { font-size: 22px; font-weight: 700; }
+.store-event-text > span:last-child { font-size: 14px; opacity: .85; }
+.store-shots { display: flex; gap: 12px; margin-right: -60px; }
 .store-shot {
+  flex: none;
+  width: 228px;
+  height: 470px;
+  border-radius: 26px;
+  background: #F2F3F5;
+  padding: 26px 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+.store-shot > span { min-height: 50px; font-size: 21px; font-weight: 600; line-height: 1.2; text-align: center; }
+.store-shot-phone {
   flex: 1;
-  min-width: 0;
-  aspect-ratio: 4 / 5;
-  border-radius: 18px;
-  background: var(--bubble);
-  padding: 16px;
+  border-radius: 22px 22px 0 0;
+  border: 5px solid var(--ios-ink);
+  border-bottom: 0;
+  background: #FFFFFF;
+  padding: 30px 10px 10px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 4px;
+  gap: 6px;
 }
-.store-shot.alt { background: var(--accent-soft); }
-.store-shot span { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.store-shot b { font-size: clamp(20px, 6.6vw, 26px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.store-shot-phone i { display: block; border-radius: 12px; background: var(--bubble); align-self: flex-start; }
+.store-shot-phone i.me { align-self: flex-end; background: var(--accent); }
+.store-shot-phone i.mid { align-self: center; background: var(--accent); }
+.store-shot-phone i.bar { align-self: center; background: var(--avatar); }
+/* 떠 있는 캡슐 모양 탭 바 */
+.store-tabs {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  height: 62px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: 31px;
+  background: rgba(250, 250, 250, 0.94);
+  border: 1px solid var(--ios-line);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.store-tabs > div {
+  flex: 1;
+  height: 50px;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--ios-ink);
+}
+.store-tabs > div.on { background: #ECECEE; color: var(--ios-blue); }
+.store-tabs span { font-size: 11px; font-weight: 600; }
 
 /* Open 전환 (readme/화면전환_예시.mp4 기준, 전체 약 0.56초).
    앞 45%: 스토어 화면이 둥근 카드로 작아지면서 동시에 왼쪽으로 밀려 나가고, 맵쳐 카드가 바로 뒤따라 들어온다.
