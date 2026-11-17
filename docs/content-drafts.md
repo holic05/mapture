@@ -114,3 +114,18 @@ S03(재성의 폰)과 S04b(S04 재촬영용)는 다른 씬에 이어 붙지 않�
   | S13a~e 몽타주 | 9:15 AM / 1:40 PM / 4:25 PM / 11:05 PM / 8:30 AM | 컷마다 다른 때. 화면에 시각이 나오지 않아 큐시트용 |
   | S14 카페 2년 뒤 | 2:10 PM | 낮 |
   | S15 캠퍼스 벤치 | 2:40 PM | S14 30분 뒤 |
+- **3차 더미 대화 (2026-11-17)** `[TODO: 작가 확인]` — 에밀리가 그사이에도 맵쳐를 계속 써 왔다는 흐름. 각 씬의 `history`에 들어 있고,
+  시각은 `"-2d 11:14 PM"`(그 씬 날짜에서 며칠 전 + 시각) 형식. 화면의 월·요일은 촬영 날짜에 따라 달라집니다(연도는 표시 안 함).
+  - **S08 → S09 (S09 history, 목업 S09-Notice 문구 그대로)**
+    - `-2d 11:14 PM` What should I review tonight to stay on track for the certification exam? → Based on your study history, reviewing Chapter 4 (Labor Relations Law) tonight has a 78.4% probability of improving your next mock test score!
+    - `-0d 1:32 PM` How long should I study before taking a break? → Based on your concentration patterns, studying for 50 more minutes before a 5-minute break is optimal!
+  - **S10 → S11 (S11 history, 벚꽃 → 수강신청)**
+    - `-118d 12:40 PM` Should I go see the cherry blossoms at Yeouido this weekend? → Based on crowd forecasts and your study schedule, a 25-minute visit on Saturday at 8:10 a.m. keeps the impact on your probability of success under 0.01 percentage points!
+    - `-6d 9:15 PM` When does course registration open for next semester? → Course registration opens on Monday at 10:00 a.m. There is a 91.2% probability that the courses you want will be full within 4 minutes!
+    - `-1d 11:32 PM` What time should I log in on registration day? → Logging in at 9:58 a.m. gives you a 96.5% probability of securing all of your first-choice courses!
+  - **S13 → S14 (S14 history, 2년(730일)에 걸쳐)**
+    - `-690d 4:20 PM` Which courses should I take next semester to stay on track? → Based on your goals and grade history, taking Labor Law II and HR Analytics next semester could increase your probability of success by 0.9 percentage points!
+    - `-430d 10:05 PM` Compare my probability of success if I intern at Sosun Group instead of Oracle Group. → Here's how the two internships compare! [비교 블록: Oracle Group 74.80% │ Sosun Group 73.10%, Difference: 1.70 percentage points]
+    - `-190d 1:15 AM` What should I emphasize in my Oracle Group interview? → Based on an analysis of 1,284 successful interviews, emphasizing your AI Labor Management Specialist certification has a 92.7% probability of impressing the panel!
+    - `-9d 8:50 AM` When will Oracle Group announce the hiring results? → There is a 97.9% probability that Oracle Group will announce the results this Friday at 5:00 p.m.!
+- **S14 시작 상태:** 질문과 87% 답변을 `history`로 옮기고 `steps`는 비웠습니다. 씬을 고르면 둘 다 이미 떠 있습니다 (구분선 `Today` + 촬영 순간 시각).

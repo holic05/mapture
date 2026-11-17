@@ -5,7 +5,7 @@
 // ★ 앱 파일(html/css/js/아이콘)을 고쳐서 배포할 때는 CACHE_VERSION을 올릴 것.
 //   scenes.json만 고쳤다면 올릴 필요 없음.
 
-const CACHE_VERSION = 'v13';
+const CACHE_VERSION = 'v14';
 const CACHE_NAME = `mapture-${CACHE_VERSION}`;
 
 // 설치 시 미리 받아 둘 파일 (모두 상대 경로 → GitHub Pages 하위 경로에서도 동작)

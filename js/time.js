@@ -2,6 +2,7 @@
 //   "now"            → 그 메시지가 표시되는 순간의 기기 시각
 //   "-5m" "-2h" "-1d" → 씬 시작 시각 기준 과거 (history용)
 //   "+17m"           → 씬 시작 시각 기준 미래 (리포트용)
+//   "-2d 11:14 PM"   → 씬 시작 날짜에서 이틀 전, 시각은 11:14 PM (더미 대화용. "-0d 1:32 PM" = 같은 날)
 //   그 외 문자열      → 그대로 표시
 
 const UNIT = { m: 60e3, h: 3600e3, d: 86400e3, w: 7 * 86400e3, y: 365 * 86400e3 };
@@ -12,6 +13,15 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export function resolveTime(value, sceneStart, now = new Date()) {
   if (value == null || value === '') return null;
   if (value === 'now') return now;
+  // "-2d 11:14 PM": 기준 날짜에서 이틀 전, 시각은 11:14 PM으로 고정 (더미 대화처럼 그날의 시각이 정해진 경우)
+  const d = /^([+-])\s*(\d+)\s*d\s+(.+)$/.exec(String(value).trim());
+  const clock = d && parseClock(d[3]);
+  if (clock) {
+    const t = new Date(sceneStart);
+    t.setDate(t.getDate() + Number(d[2]) * (d[1] === '-' ? -1 : 1));
+    t.setHours(clock.h, clock.m, 0, 0);
+    return t;
+  }
   const m = /^([+-])\s*(\d+(?:\.\d+)?)\s*([mhdwy])$/.exec(String(value).trim());
   if (m) {
     const ms = Number(m[2]) * UNIT[m[3]] * (m[1] === '-' ? -1 : 1);

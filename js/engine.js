@@ -86,12 +86,14 @@ export class Engine {
     for (const prev of chain) {
       const base = bases.get(prev);
       let minutes = 0; // 그 씬 안에서 흐른 시간(질문 하나에 1분으로 어림) → 구분선 "now"가 조금씩 뒤로 간다
+      const history = new Set(prev.history || []);
       for (const step of [...(prev.history || []), ...(prev.steps || [])]) {
         if (step.type === 'user' && step.sendDisabled) continue; // 보내지 못한 질문은 대화에 남지 않는다
         // 그 씬 안에서 흐른 시간이 다음 씬의 시각을 넘지 않게 한다
         const at = Math.min(base.getTime() + minutes * 60e3, ends.get(prev) - 60e3);
         out.push({ step, base, now: new Date(Math.max(at, base.getTime())), chained: true });
-        if (step.type === 'user') minutes++;
+        // 흐른 시간은 그 씬에서 실제로 묻는 질문(steps)만 센다. history(미리 깔린 대화)는 각자 시각이 있어서 세지 않는다
+        if (step.type === 'user' && !history.has(step)) minutes++;
       }
     }
     for (const step of scene.history || []) {

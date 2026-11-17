@@ -396,6 +396,36 @@ def t_report_s04b(run):
     page.context.close()
 
 
+def t_content(run):
+    """3차 콘텐츠: 더미 대화의 시각("-2d 11:14 PM"), S14은 질문과 87% 답변이 떠 있는 상태로 시작"""
+    page = run.page(False)
+    page.clock.set_fixed_time("2026-11-17T14:40:00")  # 화요일 2:40 PM (S09 phoneTime)
+    run.open(page, "S09")
+    labels = page.locator(".time-divider").all_inner_texts()
+    check("S09: dummy chats are dated '-2d 11:14 PM' and '-0d 1:32 PM' (Sun 11:14 PM / Today 1:32 PM)",
+          labels == ["Sun 11:14 PM", "Today 1:32 PM"] and page.locator(".bubble-user").count() == 2, labels)
+    run.open(page, "S14")
+    labels = page.locator(".time-divider").all_inner_texts()
+    last = page.locator(".bubble-mapture").last
+    at_bottom = page.evaluate("(() => { const s = document.querySelector('.scroller'); return s.scrollHeight - s.scrollTop - s.clientHeight < 2; })()")
+    check("S14 opens with the question and the 87% answer already on screen (no steps to play), scrolled to the bottom",
+          "87%" in last.inner_text() and page.locator(".bubble-loading").count() == 0 and at_bottom and labels[-1] == "Today 2:40 PM", labels)
+    check("S14: four earlier chats spread over two years, no year shown",
+          len(labels) == 5 and not any(re.search(r"\b20\d\d\b", l) for l in labels), labels)
+    page.wait_for_timeout(1500)
+    check("S14: nothing else arrives afterwards", page.locator(".bubble-mapture").count() == 5)
+    run.shot(page, "s14-start")
+    page.context.close()
+
+    page = run.page(False)
+    page.clock.set_fixed_time("2026-11-17T14:40:00")
+    run.open(page, "S15", chain=True)
+    labels = page.locator(".time-divider").all_inner_texts()
+    check("S15 chain: S14's divider is its phoneTime (2:10 PM), not shifted by the dummy questions",
+          labels[-1] == "Today 2:10 PM", labels[-3:])
+    page.context.close()
+
+
 def t_store(run):
     """스토어 화면: 세로 스크롤(리뷰·설명), 정보 줄·Preview 가로 넘기기, GET 말고는 반응 없음"""
     page = run.page("S04", 390, 844)
@@ -1097,7 +1127,7 @@ def t_pwa(run):
     page.context.close()
 
 
-TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "inputh": t_input_height, "store": t_store, "report4b": t_report_s04b, "voice": t_voice, "vscroll": t_voice_scroll, "voicex": t_voice_x, "auto": t_autosubmit,
+TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "inputh": t_input_height, "store": t_store, "report4b": t_report_s04b, "content": t_content, "voice": t_voice, "vscroll": t_voice_scroll, "voicex": t_voice_x, "auto": t_autosubmit,
          "chain": t_chain, "open": t_open, "guard": t_guard, "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "notice": t_notice, "compare": t_compare, "json": t_json_error, "pwa": t_pwa}
 
 

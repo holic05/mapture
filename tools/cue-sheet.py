@@ -204,6 +204,11 @@ def scene_section(scene, by_id):
         out.append(f"자동으로 진행되는 시간 합계: 약 {total:.0f}초 (배우 동작 시간 제외)")
     else:
         out.append("\n진행 단계 없음: 화면을 보여 주거나 스크롤만 하는 씬." + (" (공지 카드만 표시)" if nt else ""))
+        hist = [st for st in scene.get("history") or [] if st["type"] != "divider"]
+        if hist and start == "chat":
+            last_q = next((st for st in reversed(hist) if st["type"] == "user"), None)
+            if last_q:
+                out.append(f"처음부터 화면 맨 아래에 보이는 것: “{esc(last_q['text'])}” 와 그 답변.")
 
     notes = [st["note"] for st in (scene.get("history") or []) + steps + ([nt] if nt else []) if "TODO" in str(st.get("note", ""))]
     if notes:
