@@ -54,7 +54,8 @@ class Run:
         page = ctx.new_page()
         page.errors = []
         page.on("pageerror", lambda e: page.errors.append(str(e)))
-        page.on("console", lambda m: page.errors.append(m.text) if m.type == "error" else None)
+        # WebKit(iPhone Safari)은 Android용 viewport 설정 interactive-widget을 모른다고 콘솔에 알린다 (무해, Android용으로 남겨 둠)
+        page.on("console", lambda m: page.errors.append(m.text) if m.type == "error" and "interactive-widget" not in m.text else None)
         if scene is not False:
             self.open(page, scene, chain)
         return page
@@ -120,14 +121,28 @@ def pass_download(page):
     page.wait_for_selector(".overlay", state="detached", timeout=8000)
 
 
+def is_webkit(page):
+    return page.context.browser.browser_type.name == "webkit"
+
+
+def hold(page, x, y, ms=800):
+    """(x, y)를 ms 동안 누르고 있다가 뗀다. Chromium은 진짜 터치(CDP), WebKit은 CDP가 없어 포인터(마우스)로."""
+    if is_webkit(page):
+        page.mouse.move(x, y)
+        page.mouse.down()
+        page.wait_for_timeout(ms)
+        page.mouse.up()
+    else:
+        cdp = page.context.new_cdp_session(page)
+        cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x, "y": y}]})
+        page.wait_for_timeout(ms)
+        cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+    page.wait_for_timeout(400)
+
+
 def long_press(page, selector, ms=800):
     box = page.locator(selector).first.bounding_box()
-    point = [{"x": box["x"] + box["width"] / 2, "y": box["y"] + box["height"] / 2}]
-    cdp = page.context.new_cdp_session(page)
-    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": point})
-    page.wait_for_timeout(ms)
-    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
-    page.wait_for_timeout(400)
+    hold(page, box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, ms)
 
 
 def wait_typing_done(page, timeout=60000):
@@ -790,7 +805,7 @@ def t_open(run):
     page.tap(".store-btn")
     frames = {}
     start = time.time()
-    for name, at in [("shrink", 0.04), ("slide", 0.15), ("grow", 0.40), ("full", 0.66)]:
+    for name, at in [("shrink", 0.08), ("slide", 0.15), ("grow", 0.40), ("full", 0.66)]:
         page.wait_for_timeout(max(0, int((at - (time.time() - start)) * 1000)))
         frames[name] = page.evaluate("""() => { const m = (el) => el ? new DOMMatrix(getComputedStyle(el).transform) : null;
           const store = document.querySelector('.overlay-download'), card = document.querySelector('.overlay-launch');
@@ -828,7 +843,7 @@ def t_guard(run):
       const bubble = document.querySelector('.empty h1');
       return { menu: fire(bubble, 'contextmenu'), menuInput: fire(document.querySelector('#ask'), 'contextmenu'),
                select: fire(bubble, 'selectstart'), drag: fire(document.querySelector('.mascot'), 'dragstart'),
-               userSelect: getComputedStyle(bubble).userSelect,
+               userSelect: getComputedStyle(bubble).webkitUserSelect || getComputedStyle(bubble).userSelect,
                viewport: document.querySelector('meta[name=viewport]').content,
                notranslate: document.documentElement.getAttribute('translate') === 'no' && !!document.querySelector('meta[name=google][content=notranslate]'),
                scheme: getComputedStyle(document.documentElement).colorScheme,
@@ -944,12 +959,7 @@ def t_menu(run):
     check("short press on menu does nothing", page.locator(".sheet").count() == 0)
     box = page.locator("[data-ref=menu]").bounding_box()
     x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
-    cdp = page.context.new_cdp_session(page)
-    touch = [{"x": x, "y": y}]
-    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": touch})
-    page.wait_for_timeout(800)
-    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
-    page.wait_for_timeout(400)
+    hold(page, x, y)
     check("long press opens the scene sheet (and it stays open)", page.locator(".sheet").count() == 1)
     run.shot(page, "menu")
     page.locator(".sheet-item", has_text="S10").tap()
@@ -963,10 +973,7 @@ def t_menu(run):
     run.shot(page, "s10")
     # 진행 중인 씬을 리셋하면 이전 타이머가 새 씬에 끼어들지 않는다
     run.open(page, "S13a")
-    cdp = page.context.new_cdp_session(page)
-    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": touch})
-    page.wait_for_timeout(800)
-    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+    hold(page, x, y)
     page.locator(".sheet-item", has_text="S15").tap()
     page.wait_for_timeout(2500)
     check("reset cancels the previous scene's timers (S13a card never drops into S15)",
@@ -1094,6 +1101,10 @@ TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_inpu
          "chain": t_chain, "open": t_open, "guard": t_guard, "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "notice": t_notice, "compare": t_compare, "json": t_json_error, "pwa": t_pwa}
 
 
+# WebKit에서는 돌릴 수 없는 검사 (Chromium 전용 기능인 CDP로 한글 조합 입력을 흉내 낸다)
+CHROMIUM_ONLY = {"ime": "한글 조합 입력 흉내(CDP)는 Chromium 전용 — iOS 한글 키보드는 iPhone에서 직접 확인"}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:8000/")
@@ -1107,6 +1118,9 @@ def main():
         run = Run(browser, args.base)
         for name in names:
             print(f"--- {name}")
+            if args.browser == "webkit" and name in CHROMIUM_ONLY:
+                print(f"SKIP  {name}: {CHROMIUM_ONLY[name]}")
+                continue
             try:
                 TESTS[name](run)
             except Exception as e:  # 한 테스트가 죽어도 나머지는 계속

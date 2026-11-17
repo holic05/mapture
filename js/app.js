@@ -86,16 +86,64 @@ async function loadScenes() {
   return data;
 }
 
-/** JSON 오류 위치를 줄 번호와 그 줄 내용으로 보여 준다 */
+/** JSON 오류 위치를 줄 번호와 그 줄 내용으로 보여 준다.
+    Chrome은 오류 문구에 위치(position N)를 넣어 주지만 iPhone Safari는 넣지 않으므로, 그때는 직접 찾는다. */
 function describeJsonError(err, text) {
   const msg = String(err.message || err);
   const m = /position (\d+)/.exec(msg);
-  if (!m) return msg;
-  const pos = Number(m[1]);
+  const pos = m ? Number(m[1]) : findJsonErrorPos(text);
+  if (pos < 0) return msg;
   const before = text.slice(0, pos).split('\n');
   const lineNo = before.length;
   const line = text.split('\n')[lineNo - 1] || '';
   return `${msg}\n\nLine ${lineNo}:\n${line.trim().slice(0, 200)}`;
+}
+
+/** JSON 문법이 처음 어긋나는 글자 위치 (오류가 없으면 -1). 오류 표시용 간단한 검사기 */
+function findJsonErrorPos(text) {
+  let i = 0;
+  const fail = () => { throw i; };
+  const ws = () => { while (/[ \t\n\r]/.test(text[i] || '')) i++; };
+  const lit = (word) => { if (text.startsWith(word, i)) i += word.length; else fail(); };
+  const str = () => {
+    if (text[i] !== '"') fail();
+    i++;
+    while (i < text.length && text[i] !== '"') {
+      if (text[i] === '\\') { i++; if (text[i] === 'u') { if (!/^[0-9a-fA-F]{4}$/.test(text.slice(i + 1, i + 5))) fail(); i += 4; } else if (!'"\\/bfnrt'.includes(text[i] || '!')) fail(); }
+      else if (text.charCodeAt(i) < 0x20) fail();
+      i++;
+    }
+    if (text[i] !== '"') fail();
+    i++;
+  };
+  const num = () => {
+    const m = /^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/.exec(text.slice(i));
+    if (!m) fail();
+    i += m[0].length;
+  };
+  const value = () => {
+    ws();
+    const c = text[i];
+    if (c === '{') {
+      i++; ws();
+      if (text[i] === '}') { i++; return; }
+      for (;;) { ws(); str(); ws(); if (text[i] !== ':') fail(); i++; value(); ws(); if (text[i] === ',') { i++; continue; } if (text[i] === '}') { i++; return; } fail(); }
+    } else if (c === '[') {
+      i++; ws();
+      if (text[i] === ']') { i++; return; }
+      for (;;) { value(); ws(); if (text[i] === ',') { i++; continue; } if (text[i] === ']') { i++; return; } fail(); }
+    } else if (c === '"') str();
+    else if (c === 't') lit('true');
+    else if (c === 'f') lit('false');
+    else if (c === 'n') lit('null');
+    else num();
+  };
+  try {
+    value(); ws();
+    return i < text.length ? i : -1;
+  } catch (pos) {
+    return typeof pos === 'number' ? Math.min(pos, text.length) : -1;
+  }
 }
 
 function validate(data) {
