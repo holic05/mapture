@@ -1,6 +1,6 @@
 // 씬 엔진: scenes.json의 씬 하나를 순서대로 재생한다.
 // 화면 그리기는 view(js/views/chat.js)가 맡고, 여기는 "지금 몇 번째 단계인가"만 관리한다.
-import { dividerLabel, durationMs } from './time.js';
+import { dividerLabel, durationMs, gapDays, parseClock } from './time.js';
 
 const DEFAULT_LOADING_TEXT = 'One moment, please…';
 const DEFAULT_LOADING_SECONDS = 2;
@@ -54,18 +54,28 @@ export class Engine {
       s = prev;
     }
 
-    // 각 앞 씬의 시각: 지금 씬에서 gap만큼씩 거슬러 올라간다
+    // 각 앞 씬의 시각: 날짜는 지금 씬에서 gap만큼씩 거슬러 올라가고(분·시간 단위 gap은 같은 날),
+    // 시각은 그 씬의 대본 시각(phoneTime)으로 고정한다. 예: S06에서 본 S04 대화 = 8일 전 9:22 PM.
+    // phoneTime이 없는 씬은 예전처럼 지금 시각에서 gap만큼 뺀 시각을 쓴다.
     const bases = new Map();
     let t = this.sceneStart.getTime();
+    let days = 0;
     let later = scene;
     for (let i = chain.length - 1; i >= 0; i--) {
+      const prev = chain[i];
+      days += gapDays(later.gap);
       const dayStart = new Date(t).setHours(0, 0, 0, 0);
       t -= durationMs(later.gap);
-      // 분·시간 단위 gap("30m", "3h")은 "같은 날"이라는 뜻이다. 자정 직후에 촬영해도
-      // 앞 씬이 전날(Yesterday)로 넘어가지 않게 그날 0시에서 멈춘다. 날짜를 넘기려면 d·w·y 단위를 쓴다.
-      if (/[mh]\s*$/.test(String(later.gap ?? '')) && t < dayStart) t = dayStart;
-      bases.set(chain[i], new Date(t));
-      later = chain[i];
+      if (/[mh]\s*$/.test(String(later.gap ?? '')) && t < dayStart) t = dayStart; // 같은 날 gap은 전날로 넘기지 않는다
+      const clock = parseClock(prev.phoneTime);
+      if (clock) {
+        const d = new Date(this.sceneStart);
+        d.setDate(d.getDate() - days);
+        d.setHours(clock.h, clock.m, 0, 0);
+        t = d.getTime();
+      }
+      bases.set(prev, new Date(t));
+      later = prev;
     }
 
     // 각 앞 씬이 끝나야 하는 시각 = 그다음 씬의 시작 시각

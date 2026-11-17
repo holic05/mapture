@@ -59,12 +59,12 @@
       ]
     },
     {
-      "id": "S05", "title": "S#5 Classroom — payment", "start": "paywall", "plan": "Free", "profile": "E", "after": "S04", "gap": "7d",
+      "id": "S05", "title": "S#5 Classroom — payment", "start": "paywall", "plan": "Free", "profile": "E", "phoneTime": "11:05 AM", "after": "S04", "gap": "7d",
       "history": [],
       "steps": []
     },
     {
-      "id": "S06", "title": "S#6 Montage — voice Q&A", "start": "chat", "plan": "Premium", "profile": "E", "after": "S05", "gap": "1d",
+      "id": "S06", "title": "S#6 Montage — voice Q&A", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "2:15 PM", "after": "S05", "gap": "1d",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -82,7 +82,7 @@
       ]
     },
     {
-      "id": "S07", "title": "S#7 Daehangno — night", "start": "chat", "plan": "Premium", "profile": "E", "after": "S06", "gap": "3d",
+      "id": "S07", "title": "S#7 Daehangno — night", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "7:10 PM", "after": "S06", "gap": "3d",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -91,7 +91,7 @@
       ]
     },
     {
-      "id": "S08", "title": "S#8 Restaurant — concert", "start": "chat", "plan": "Premium", "profile": "E", "after": "S07", "gap": "30m",
+      "id": "S08", "title": "S#8 Restaurant — concert", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "7:40 PM", "after": "S07", "gap": "30m",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -100,7 +100,7 @@
       ]
     },
     {
-      "id": "S09", "title": "S#9 Study room", "start": "chat", "plan": "Premium", "profile": "E", "after": "S08", "gap": "4d", "notice": {"value": "71.23%", "delta": "0.10", "up": true, "size": "compact"},
+      "id": "S09", "title": "S#9 Study room", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "2:40 PM", "after": "S08", "gap": "4d", "notice": {"value": "71.23%", "delta": "0.10", "up": true, "size": "compact"},
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -111,7 +111,7 @@
       ]
     },
     {
-      "id": "S10", "title": "S#10 Library — book list", "start": "chat", "plan": "Premium", "profile": "E", "textScale": 1.3, "after": "S09", "gap": "30m",
+      "id": "S10", "title": "S#10 Library — book list", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "3:10 PM", "textScale": 1.3, "after": "S09", "gap": "30m",
       "history": [
         {"type": "divider", "time": "-2m"},
         {"type": "user", "input": "typing", "text": "Recommend books for me."},
@@ -120,7 +120,7 @@
       "steps": []
     },
     {
-      "id": "S11", "title": "S#11 Emily's room — course comparison", "start": "chat", "plan": "Premium", "profile": "E", "after": "S10", "gap": "20w",
+      "id": "S11", "title": "S#11 Emily's room — course comparison", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "10:48 PM", "after": "S10", "gap": "20w",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -129,32 +129,32 @@
       ]
     },
     {
-      "id": "S13a", "title": "S#13 Montage — cut a (69.53%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S11", "gap": "3w", "notice": {"value": "69.53%", "delta": "1.45", "up": false, "appear": "drop"},
+      "id": "S13a", "title": "S#13 Montage — cut a (69.53%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "9:15 AM", "after": "S11", "gap": "3w", "notice": {"value": "69.53%", "delta": "1.45", "up": false, "appear": "drop"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S13b", "title": "S#13 Montage — cut b (73.22%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13a", "gap": "3w", "notice": {"value": "73.22%", "delta": "3.69", "up": true, "appear": "drop"},
+      "id": "S13b", "title": "S#13 Montage — cut b (73.22%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "1:40 PM", "after": "S13a", "gap": "3w", "notice": {"value": "73.22%", "delta": "3.69", "up": true, "appear": "drop"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S13c", "title": "S#13 Montage — cut c (72.88%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13b", "gap": "3w", "notice": {"value": "72.88%", "delta": "0.34", "up": false, "appear": "drop"},
+      "id": "S13c", "title": "S#13 Montage — cut c (72.88%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "4:25 PM", "after": "S13b", "gap": "3w", "notice": {"value": "72.88%", "delta": "0.34", "up": false, "appear": "drop"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S13d", "title": "S#13 Montage — cut d (73.39%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13c", "gap": "3w", "notice": {"value": "73.39%", "delta": "0.51", "up": true, "appear": "drop"},
+      "id": "S13d", "title": "S#13 Montage — cut d (73.39%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "11:05 PM", "after": "S13c", "gap": "3w", "notice": {"value": "73.39%", "delta": "0.51", "up": true, "appear": "drop"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S13e", "title": "S#13 Montage — cut e (74.11%)", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13d", "gap": "3w", "notice": {"value": "74.11%", "delta": "0.72", "up": true, "appear": "drop", "note": "[TODO: 작가 확인] 대본은 ▼인데 숫자는 73.39 → 74.11로 오름. 지금은 ▲ 0.72로 표시"},
+      "id": "S13e", "title": "S#13 Montage — cut e (74.11%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "8:30 AM", "after": "S13d", "gap": "3w", "notice": {"value": "74.11%", "delta": "0.72", "up": true, "appear": "drop", "note": "[TODO: 작가 확인] 대본은 ▼인데 숫자는 73.39 → 74.11로 오름. 지금은 ▲ 0.72로 표시"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S14", "title": "S#14 Café — two years later", "start": "chat", "plan": "Premium", "profile": "E", "after": "S13e", "gap": "2y",
+      "id": "S14", "title": "S#14 Café — two years later", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "2:10 PM", "after": "S13e", "gap": "2y",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -163,7 +163,7 @@
       ]
     },
     {
-      "id": "S15", "title": "S#15 Campus bench — Send does not respond", "start": "chat", "plan": "Premium", "profile": "E", "after": "S14", "gap": "30m",
+      "id": "S15", "title": "S#15 Campus bench — Send does not respond", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "2:40 PM", "after": "S14", "gap": "30m",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},

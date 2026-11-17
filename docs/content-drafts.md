@@ -92,3 +92,24 @@ S03(재성의 폰)과 S04b(S04 재촬영용)는 다른 씬에 이어 붙지 않�
   문장 `Here's how your probability of success compares for this semester!`와 차이 표시 `Difference: 0.01 percentage points`는 초안입니다.
   원래 문장은 `note`에 보존.
 - **S09 공지 카드의 증감:** `▲ 0.10` (S08의 71.13% → 71.23%, 목업 S09-Notice-Compact와 같음).
+- **스토어 화면 추가 문구 (스크롤용, 2026-11-17)** `[TODO: 작가 확인]` — `js/views/download.js`의 `REVIEWS`·`DESCRIPTION`
+  - 평점: `4.9 out of 5`, `7.2M Ratings` (★5 92% / ★4 5% / ★3 1.5% / ★2 0.5% / ★1 1%)
+  - 리뷰 1 `Scarily accurate` ★5 nightowl_jin · 2d ago: Asked if my bus would be late. 96.8%. I left ten minutes early and made my interview. Mapture 6 hasn't been wrong once.
+  - 리뷰 2 `Worth every token` ★5 minseo.p · 5d ago: Premium raised my probability of success by 4.2 points in one semester. I don't make a single decision without it anymore.
+  - 리뷰 3 `Stopped overthinking` ★4 hyun_w · 1w ago: I used to agonize over every choice. Now I just ask. One star off because it told me not to adopt a cat.
+  - 설명: Mapture 6 is here — our most accurate prediction engine yet. / Ask anything about your future and get an answer you can act on, with a probability attached. Mapture analyzes your behavioral patterns, contacts, schedule and academic records to tell you what happens next, and what to do about it. / • Instant predictions, by voice or text • Long-term simulation up to 10 years ahead • Real-time Progress Updates on your probability of success
+  - 정보 줄 5·6번째 칸(옆으로 넘겨야 보임): Language `EN + 41 More`, Size `212.4 MB`. Preview 세 번째 문구 `See ten years ahead`.
+- **씬별 대본 시각 (`phoneTime`, 2026-11-17 추가)** `[TODO: 작가 확인]` — 대본 원문이 없어 씬 제목·대사에서 추정. 이어 붙은 대화의 구분선 시각이 됩니다.
+
+  | 씬 | phoneTime | 근거 |
+  |---|---|---|
+  | S05 강의실 결제 | 11:05 AM | 오전 수업 |
+  | S06 몽타주 음성 Q&A | 2:15 PM | 낮, 수업 사이 |
+  | S07 대학로 밤 | 7:10 PM | "dinner tonight" |
+  | S08 식당 | 7:40 PM | S07 30분 뒤 |
+  | S09 스터디룸 | 2:40 PM | 오후 (수정 요청서) |
+  | S10 도서관 | 3:10 PM | S09 30분 뒤 |
+  | S11 에밀리 방 | 10:48 PM | 밤, 수강신청 고민 |
+  | S13a~e 몽타주 | 9:15 AM / 1:40 PM / 4:25 PM / 11:05 PM / 8:30 AM | 컷마다 다른 때. 화면에 시각이 나오지 않아 큐시트용 |
+  | S14 카페 2년 뒤 | 2:10 PM | 낮 |
+  | S15 캠퍼스 벤치 | 2:40 PM | S14 30분 뒤 |

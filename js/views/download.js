@@ -31,43 +31,77 @@ const EVENT_MASCOT = `<svg class="store-event-mascot" width="170" height="170" v
 const shot = (title, bubbles) => `<div class="store-shot"><span>${title}</span><div class="store-shot-phone">${
   bubbles.map(([side, w, hgt]) => `<i class="${side}" style="width:${w}%;height:${hgt}px"></i>`).join('')}</div></div>`;
 
+// 스토어 문구 초안 [TODO: 작가 확인] — 극 중 세계관(Mapture 6 출시, 미래 예측 앱). docs/content-drafts.md에 같은 목록.
+const REVIEWS = [
+  { title: 'Scarily accurate', stars: 5, who: 'nightowl_jin', when: '2d ago',
+    text: 'Asked if my bus would be late. 96.8%. I left ten minutes early and made my interview. Mapture 6 hasn’t been wrong once.' },
+  { title: 'Worth every token', stars: 5, who: 'minseo.p', when: '5d ago',
+    text: 'Premium raised my probability of success by 4.2 points in one semester. I don’t make a single decision without it anymore.' },
+  { title: 'Stopped overthinking', stars: 4, who: 'hyun_w', when: '1w ago',
+    text: 'I used to agonize over every choice. Now I just ask. One star off because it told me not to adopt a cat.' },
+];
+const DESCRIPTION = [
+  'Mapture 6 is here — our most accurate prediction engine yet.',
+  'Ask anything about your future and get an answer you can act on, with a probability attached. Mapture analyzes your behavioral patterns, contacts, schedule and academic records to tell you what happens next, and what to do about it.',
+  '• Instant predictions, by voice or text<br>• Long-term simulation up to 10 years ahead<br>• Real-time Progress Updates on your probability of success',
+];
+const RATING_BARS = [92, 5, 1.5, 0.5, 1]; // ★5 → ★1 비율(%)
+
+const stars = (n) => '★'.repeat(n) + '<i>' + '★'.repeat(5 - n) + '</i>';
+
+/** GET 버튼과 진행 링. 본문(앱 정보 옆)과 상단 바(스크롤해서 본문 버튼이 가려졌을 때) 두 곳에 같은 것이 있다 */
+const action = (where) => `
+  <button type="button" class="${where === 'mini' ? 'store-mini-btn' : 'store-btn'}" data-act="btn">GET</button>
+  <button type="button" class="store-ring" data-act="ring" aria-label="Stop download" hidden>
+    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+      <circle cx="15" cy="15" r="${RING_R}" fill="none" stroke="#D6DBE1" stroke-width="2.5"/>
+      <circle data-act="arc" cx="15" cy="15" r="${RING_R}" fill="none" stroke="#0A7AFF" stroke-width="2.5" stroke-linecap="round"
+              stroke-dasharray="${RING_LEN.toFixed(2)}" stroke-dashoffset="${RING_LEN.toFixed(2)}" transform="rotate(-90 15 15)"/>
+      <rect x="11" y="11" width="8" height="8" rx="1.5" fill="#0A7AFF"/>
+    </svg>
+  </button>`;
+
 /**
  * @param {HTMLElement} root
  * @param {{seconds?: number, onMenuLongPress?: Function, onLaunched?: Function}} hooks
  *   seconds: 진행 링이 다 차는 시간(초)
  *   onLaunched: 실행 애니메이션이 끝나 채팅 화면이 드러나는 순간
+ *
+ * 화면은 세로로 스크롤되고(에밀리가 훑어보며 망설이는 장면), 정보 줄과 Preview 줄은 옆으로 넘길 수 있다.
+ * GET(OPEN) 말고는 눌러도 반응하지 않는다. 뒤로 가기 버튼은 길게 누르면 숨은 씬 메뉴.
+ * 본문 GET이 위로 스크롤되어 사라지면 상단 바 가운데에 작은 아이콘, 오른쪽에 작은 GET이 나타난다(같은 동작).
  */
 export function showDownload(root, hooks = {}) {
   const ov = openOverlay(root, 'download', `
-    <header class="store-top">
+    <header class="store-top" data-ref="top">
       <button type="button" class="store-round" data-menu aria-label="Back">${ICON.back}</button>
-      <button type="button" class="store-round" aria-label="Share">${ICON.share}</button>
+      <div class="store-mini-icon" aria-hidden="true">${faceSVG(30)}</div>
+      <div class="store-top-right">
+        <div class="store-mini" data-ref="mini">${action('mini')}</div>
+        <button type="button" class="store-round" aria-label="Share">${ICON.share}</button>
+      </div>
     </header>
-    <main class="store">
+    <main class="store" data-ref="store">
       <div class="store-head">
         <div class="store-icon">${faceSVG(84)}</div>
         <div class="store-name">
           <h1>Mapture</h1>
           <p class="store-dev">Oracle Inc.</p>
-          <div class="store-action">
-            <button type="button" class="store-btn" data-ref="btn">GET</button>
-            <button type="button" class="store-ring" data-ref="ring" aria-label="Stop download" hidden>
-              <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
-                <circle cx="15" cy="15" r="${RING_R}" fill="none" stroke="#D6DBE1" stroke-width="2.5"/>
-                <circle data-ref="arc" cx="15" cy="15" r="${RING_R}" fill="none" stroke="#0A7AFF" stroke-width="2.5" stroke-linecap="round"
-                        stroke-dasharray="${RING_LEN.toFixed(2)}" stroke-dashoffset="${RING_LEN.toFixed(2)}" transform="rotate(-90 15 15)"/>
-                <rect x="11" y="11" width="8" height="8" rx="1.5" fill="#0A7AFF"/>
-              </svg>
-            </button>
+          <div class="store-action" data-ref="main">
+            ${action('main')}
             <span class="store-iap">In-App<br>Purchases</span>
           </div>
         </div>
       </div>
-      <div class="store-info">
-        <div><span class="k">7.2M Ratings</span><b>4.9</b><span>★★★★★</span></div>
-        <div><span class="k">Age</span><b>12+</b><span>Years Old</span></div>
-        <div><span class="k">Chart</span><b>#1</b><span>Productivity</span></div>
-        <div><span class="k">Developer</span><b>${ICON.developer}</b><span>Oracle Inc.</span></div>
+      <div class="store-info-wrap">
+        <div class="store-info hscroll">
+          <div><span class="k">7.2M Ratings</span><b>4.9</b><span>★★★★★</span></div>
+          <div><span class="k">Age</span><b>12+</b><span>Years Old</span></div>
+          <div><span class="k">Chart</span><b>#1</b><span>Productivity</span></div>
+          <div><span class="k">Developer</span><b>${ICON.developer}</b><span>Oracle Inc.</span></div>
+          <div><span class="k">Language</span><b>EN</b><span>+ 41 More</span></div>
+          <div><span class="k">Size</span><b>212.4</b><span>MB</span></div>
+        </div>
       </div>
       <section class="store-sec">
         <h2>Events</h2>
@@ -83,11 +117,31 @@ export function showDownload(root, hooks = {}) {
       </section>
       <section class="store-sec">
         <h2>Preview</h2>
-        <div class="store-shots" aria-hidden="true">
+        <div class="store-shots hscroll" aria-hidden="true">
           ${shot('Know what<br>happens next', [['me', 70, 22], ['ai', 85, 50], ['me', 60, 22], ['ai', 85, 60]])}
           ${shot('Every decision,<br>analyzed', [['ai', 90, 80], ['me', 65, 22], ['ai', 90, 40]])}
-          ${shot('', [['mid', 40, 40], ['bar', 70, 10], ['bar', 55, 10]])}
+          ${shot('See ten years<br>ahead', [['mid', 40, 40], ['bar', 70, 10], ['bar', 55, 10]])}
         </div>
+      </section>
+      <section class="store-sec">
+        <h2>Ratings &amp; Reviews</h2>
+        <div class="store-rating">
+          <div class="store-rating-big"><b>4.9</b><span>out of 5</span></div>
+          <div class="store-rating-bars">
+            ${RATING_BARS.map((pct, i) => `<div><span>${'★'.repeat(5 - i)}</span><i><u style="width:${pct}%"></u></i></div>`).join('')}
+            <small>7.2M Ratings</small>
+          </div>
+        </div>
+        <div class="store-reviews hscroll">
+          ${REVIEWS.map((r) => `<article class="store-review">
+            <div class="store-review-top"><b>${r.title}</b><span>${r.when}</span></div>
+            <div class="store-review-meta"><span class="stars">${stars(r.stars)}</span><span>${r.who}</span></div>
+            <p>${r.text}</p></article>`).join('')}
+        </div>
+      </section>
+      <section class="store-sec store-desc">
+        ${DESCRIPTION.map((t) => `<p>${t}</p>`).join('')}
+        <div class="store-dev-row"><div><span>Developer</span><b>Oracle Inc.</b></div></div>
       </section>
     </main>
     <nav class="store-tabs" aria-hidden="true">
@@ -98,37 +152,49 @@ export function showDownload(root, hooks = {}) {
     </nav>`, hooks);
 
   const q = (ref) => ov.el.querySelector(`[data-ref=${ref}]`);
-  const btn = q('btn');
-  const ring = q('ring');
-  const arc = q('arc');
+  const sets = ['main', 'mini'].map((where) => {
+    const box = q(where);
+    const get = (name) => box.querySelector(`[data-act=${name}]`);
+    return { btn: get('btn'), ring: get('ring'), arc: get('arc') };
+  });
+  const store = q('store');
+  const top = q('top');
   const downloadMs = (Number(hooks.seconds) > 0 ? Number(hooks.seconds) : DEFAULT_DOWNLOAD_SECONDS) * 1000;
   let state = 'idle'; // idle → downloading → ready → launching
 
-  btn.addEventListener('click', () => {
+  // 본문 GET 줄이 상단 바 밑으로 사라지면 상단 바에 작은 아이콘과 GET을 보인다
+  const onScroll = () => {
+    const limit = q('main').getBoundingClientRect().bottom - top.getBoundingClientRect().bottom;
+    top.classList.toggle('scrolled', limit < 0);
+    top.classList.toggle('shadow', store.scrollTop > 2);
+  };
+  store.addEventListener('scroll', onScroll, { passive: true });
+
+  const show = (fn) => sets.forEach(fn);
+
+  const tap = () => {
     if (state === 'idle') {
       // GET → 버튼 자리에 원형 진행 링(가운데 정지 사각형). 퍼센트 숫자는 없다.
       state = 'downloading';
-      btn.hidden = true;
-      ring.hidden = false;
+      show((x) => { x.btn.hidden = true; x.ring.hidden = false; });
       const startedAt = performance.now();
       const tick = (now) => {
         if (!ov.alive()) return;
         const p = Math.min(1, (now - startedAt) / downloadMs);
         // 처음 잠깐은 준비하듯 천천히, 그다음 꾸준히 차고 끝에서 살짝 느려진다
         const eased = p < 0.12 ? p * 0.25 : 0.03 + (1 - Math.pow(1 - (p - 0.12) / 0.88, 1.5)) * 0.97;
-        arc.setAttribute('stroke-dashoffset', (RING_LEN * (1 - eased)).toFixed(2));
+        show((x) => x.arc.setAttribute('stroke-dashoffset', (RING_LEN * (1 - eased)).toFixed(2)));
         if (p < 1) { requestAnimationFrame(tick); return; }
         state = 'ready';
-        ring.hidden = true;
-        btn.hidden = false;
-        btn.textContent = 'OPEN';
+        show((x) => { x.ring.hidden = true; x.btn.hidden = false; x.btn.textContent = 'OPEN'; });
       };
       requestAnimationFrame(tick);
     } else if (state === 'ready') {
       state = 'launching';
       launch(root, hooks, ov);
     }
-  });
+  };
+  show((x) => x.btn.addEventListener('click', tap));
 
   return ov;
 }

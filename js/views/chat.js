@@ -150,11 +150,17 @@ export function createChat(root, hooks = {}) {
     messages.textContent = '';
     scroller.hidden = true;
     refs.empty.hidden = false;
-    refs.plan.textContent = scene.plan || 'Free';
+    setPlan(scene.plan || 'Free');
     refs.profile.textContent = scene.profile || 'E';
     root.style.setProperty('--text-scale', String(scene.textScale || 1));
     input.blur();
     renderInput();
+  }
+
+  /** 상단의 플랜 표시. Premium이면 Upgrade to Premium 버튼(결제 직후·이어 붙은 앞 씬 모두)을 숨긴다 */
+  function setPlan(plan) {
+    refs.plan.textContent = plan;
+    screen.classList.toggle('premium', plan === 'Premium');
   }
 
   // ---------- 메시지 ----------
@@ -299,7 +305,7 @@ export function createChat(root, hooks = {}) {
 
     if (step.disclaimer) el.appendChild(h('p', 'disclaimer', step.disclaimer));
     if (step.button) {
-      const btn = el.appendChild(h('button', 'bubble-btn', step.button.label || ''));
+      const btn = el.appendChild(h('button', 'bubble-btn' + (step.button.action === 'paywall' ? ' upgrade' : ''), step.button.label || ''));
       btn.type = 'button';
       // 앞 씬에서 이어 붙은 대화의 버튼은 모양만 남긴다 (이미 지난 일)
       if (!opts.inert) btn.addEventListener('click', () => hooks.onAction?.(step.button.action, step));
@@ -324,7 +330,7 @@ export function createChat(root, hooks = {}) {
   /** 사용자 동작(타이핑 후 Send, 또는 음성 모드에서 탭)을 기다린다 */
   function awaitUser(step) {
     return new Promise((resolve) => {
-      pending = { step, n: 0, resolve };
+      pending = { step, n: 0, resolve, reserved: 0 };
       resetKeyState();
       if (step.input !== 'voice') setVoice(false); // 타이핑 차례면 음성 모드를 닫는다
       renderVoice();
@@ -358,6 +364,7 @@ export function createChat(root, hooks = {}) {
     screen.classList.toggle('voice-on', on);
     refs.voice.hidden = !on;
     if (on) { input.blur(); startListeningScroll(); }
+    else sizeInput(); // 입력창이 다시 보이는 순간 높이를 바로잡는다
     renderVoice();
   }
 
@@ -464,11 +471,41 @@ export function createChat(root, hooks = {}) {
     if (document.activeElement === input) {
       try { input.setSelectionRange(value.length, value.length); } catch { /* 무시 */ }
     }
-    // 내용에 맞춰 높이 조절 (긴 질문은 여러 줄로)
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, INPUT_MAX_HEIGHT) + 'px';
+    sizeInput();
     input.scrollTop = input.scrollHeight;
   }
+
+  // 입력창 높이. 타이핑 차례에 입력창을 탭하면(키보드가 올라오는 순간) 완성될 문장 기준으로 높이를 미리 잡아 두고,
+  // 타이핑 중에는 바꾸지 않는다. 글자가 늘어 두 줄로 넘어가는 순간 높이가 바뀌면 채팅 전체가 한 프레임 튀기 때문이다.
+  // 입력창이 화면에 없을 때(음성 모드)는 재지 않는다. 숨은 상태에서 재면 높이가 0이 되어
+  // X로 돌아왔을 때 'Ask Mapture' 문구가 잘린다.
+  function measure(text) {
+    const keep = input.value;
+    input.value = text;
+    input.style.height = 'auto';
+    const hgt = input.scrollHeight;
+    input.value = keep;
+    return Math.min(hgt, INPUT_MAX_HEIGHT);
+  }
+
+  function sizeInput() {
+    if (!input.offsetParent) return; // 숨어 있음 (음성 모드 등)
+    const t = typing();
+    let hgt;
+    if (t && (t.reserved || document.activeElement === input)) {
+      if (!t.reserved) t.reserved = measure(t.step.text);
+      hgt = t.reserved;
+    } else {
+      hgt = measure(input.value);
+    }
+    if (hgt > 0) input.style.height = hgt + 'px';
+  }
+
+  // 화면 폭이 바뀌면(회전 등) 미리 잡은 높이를 다시 잰다
+  window.addEventListener('resize', () => {
+    const t = typing();
+    if (t && t.reserved) { t.reserved = 0; sizeInput(); }
+  });
 
   const KEY_LINK_MS = 500;      // keydown 뒤 이 시간 안의 입력 이벤트는 그 키에 속한다
   const KEY_FALLBACK_MS = 60;   // keydown(229) 뒤 입력 이벤트가 안 오면 한 글자 입력으로 처리
@@ -612,6 +649,6 @@ export function createChat(root, hooks = {}) {
     scrollToBottom,
     setBusy,
     showNotice,
-    setPlan(plan) { refs.plan.textContent = plan; },
+    setPlan,
   };
 }

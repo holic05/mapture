@@ -8,8 +8,10 @@
   --line: #E3E7E5;
   --bubble: #F1F3F2;
   --divider: #D3D9D6;
-  --down: #B5430F;
-  --up: #1F5FBF;
+  /* 증감 화살표 색 (Progress Update·공지 카드·headline 공통). 여기 두 줄만 바꾸면 전부 바뀐다.
+     지금은 한국식: 상승 빨강 / 하락 파랑. 영미권식으로 바꾸려면 --up: #1E8E3E; --down: #C62828; 처럼 */
+  --up: #D93025;
+  --down: #1F5FBF;
   --avatar: #DDE7E4;
   --bg: #FFFFFF;
 
@@ -326,6 +328,8 @@ a { color: var(--accent); }
   border-radius: 22px;
 }
 .bubble-btn:active { background: var(--accent-dark); }
+/* 플랜이 Premium이면 Upgrade to Premium 버튼은 보이지 않는다 (결제 직후, 이어 붙은 앞 씬 대화 모두) */
+.screen.premium .bubble-btn.upgrade { display: none; }
 .report-link {
   align-self: flex-start;
   border: 0;
@@ -717,13 +721,49 @@ a { color: var(--accent); }
   color: var(--ios-ink);
 }
 .store-top {
+  position: relative;
+  z-index: 2;
   flex: none;
   height: calc(56px + env(safe-area-inset-top));
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: calc(6px + env(safe-area-inset-top)) 16px 6px;
+  background: #FFFFFF;
+  border-bottom: 1px solid transparent;
+  transition: border-color .2s;
 }
+.store-top.shadow { border-bottom-color: var(--ios-line); }
+.store-top-right { display: flex; align-items: center; gap: 10px; }
+/* 본문 GET이 스크롤로 가려지면 상단 바에 작은 아이콘과 GET이 나타난다 */
+.store-mini-icon, .store-mini { opacity: 0; visibility: hidden; transition: opacity .2s, visibility .2s; }
+.store-top.scrolled .store-mini-icon, .store-top.scrolled .store-mini { opacity: 1; visibility: visible; }
+.store-mini-icon {
+  position: absolute;
+  left: 50%;
+  top: calc(13px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  display: flex;
+}
+.store-mini { display: flex; align-items: center; }
+.store-mini .store-ring { width: 34px; justify-content: center; padding: 0; }
+.store-mini-btn {
+  height: 28px;
+  min-width: 64px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ios-blue);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 600;
+  touch-action: manipulation;
+}
+.store-mini-btn[hidden] { display: none; }
 .store-round {
   width: 40px;
   height: 40px;
@@ -739,12 +779,33 @@ a { color: var(--accent); }
 .store {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 6px 20px 0;
+  /* 아래쪽은 떠 있는 탭 바에 마지막 내용이 가리지 않게 */
+  padding: 6px 20px calc(120px + env(safe-area-inset-bottom));
 }
+.store::-webkit-scrollbar, .hscroll::-webkit-scrollbar { display: none; }
+/* 옆으로 넘기는 줄: 화면 양 끝까지 이어지고, 손을 떼면 칸에 맞춰 멈춘다 */
+.hscroll {
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  scroll-padding: 0 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.hscroll > * { scroll-snap-align: start; }
+.hscroll::after { content: ""; flex: 0 0 8px; } /* 마지막 칸 뒤 여백 */
 .store-head { display: flex; gap: 16px; align-items: stretch; flex: none; }
 .store-icon {
   flex: none;
@@ -786,15 +847,13 @@ a { color: var(--accent); }
   justify-content: flex-start;
 }
 .store-iap { font-size: 10px; line-height: 1.2; color: var(--ios-gray); }
-/* 정보 줄: 옆으로 넘기는 줄처럼 네 번째 칸이 오른쪽 끝에서 잘린다 */
+/* 정보 줄: 옆으로 넘길 수 있고, 처음에는 네 번째 칸이 오른쪽 끝에서 잘려 보인다 */
+.store-info-wrap { flex: none; border-top: 1px solid var(--ios-line); border-bottom: 1px solid var(--ios-line); }
 .store-info {
-  flex: none;
   display: flex;
   align-items: flex-start;
-  margin-right: -80px;
-  padding: 12px 0;
-  border-top: 1px solid var(--ios-line);
-  border-bottom: 1px solid var(--ios-line);
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 .store-info > div {
   flex: 0 0 calc((100vw - 40px) / 3.35);
@@ -836,7 +895,7 @@ a { color: var(--accent); }
 .store-event-kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; opacity: .8; }
 .store-event-text b { font-size: 22px; font-weight: 700; }
 .store-event-text > span:last-child { font-size: 14px; opacity: .85; }
-.store-shots { display: flex; gap: 12px; margin-right: -60px; }
+.store-shots { display: flex; gap: 12px; }
 .store-shot {
   flex: none;
   width: 228px;
@@ -895,6 +954,41 @@ a { color: var(--accent); }
   color: var(--ios-ink);
 }
 .store-tabs > div.on { background: #ECECEE; color: var(--ios-blue); }
+/* 평점과 리뷰 */
+.store-rating { display: flex; align-items: flex-end; gap: 18px; }
+.store-rating-big { flex: none; display: flex; flex-direction: column; align-items: center; }
+.store-rating-big b { font-size: 56px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; color: #4A4E55; }
+.store-rating-big span { font-size: 14px; font-weight: 600; color: var(--ios-gray); }
+.store-rating-bars { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding-bottom: 2px; }
+.store-rating-bars div { display: flex; align-items: center; gap: 6px; }
+.store-rating-bars span { flex: none; width: 46px; text-align: right; font-size: 8px; letter-spacing: 1px; color: var(--ios-gray); }
+.store-rating-bars i { flex: 1; height: 3px; border-radius: 2px; background: var(--ios-line); overflow: hidden; }
+.store-rating-bars u { display: block; height: 100%; background: #6B7079; }
+.store-rating-bars small { align-self: flex-end; margin-top: 4px; font-size: 13px; color: var(--ios-gray); }
+.store-reviews { display: flex; gap: 12px; }
+.store-review {
+  flex: 0 0 calc(100vw - 64px);
+  max-width: 360px;
+  border-radius: 16px;
+  background: #F2F3F5;
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.store-review-top { display: flex; justify-content: space-between; gap: 8px; }
+.store-review-top b { font-size: 15px; font-weight: 600; }
+.store-review-top span, .store-review-meta span:last-child { flex: none; font-size: 13px; color: var(--ios-gray); }
+.store-review-meta { display: flex; justify-content: space-between; gap: 8px; }
+.store-review .stars { font-size: 12px; letter-spacing: 1px; color: #FF9F0A; }
+.store-review .stars i { font-style: normal; color: #D6DBE1; }
+.store-review p { margin: 0; font-size: 14px; line-height: 1.45; }
+.store-desc { gap: 12px; }
+.store-desc p { margin: 0; font-size: 15px; line-height: 1.45; }
+.store-dev-row { padding-top: 6px; border-top: 1px solid var(--ios-line); }
+.store-dev-row div { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; }
+.store-dev-row span { font-size: 13px; color: var(--ios-gray); }
+.store-dev-row b { font-size: 15px; font-weight: 500; color: var(--ios-blue); }
 .store-tabs span { font-size: 11px; font-weight: 600; }
 
 /* Open 전환 (readme/화면전환_예시.mp4 기준, 전체 약 0.56초).

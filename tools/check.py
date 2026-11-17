@@ -307,6 +307,92 @@ def t_long_input(run):
     page.context.close()
 
 
+def t_input_height(run):
+    """고스트 타이핑 중 입력창 높이가 바뀌지 않는다 (두 줄로 넘어가는 순간 채팅이 튀지 않게).
+    음성 모드에서 X로 나오면 'Ask Mapture' 문구가 잘리지 않는다."""
+    for sid, w in (("S11", 360), ("S15", 390)):
+        text = first_typing_text(sid)
+        page = run.page(sid, w, 844)
+        open_keyboard(page)
+        h0 = page.evaluate("document.querySelector('#ask').getBoundingClientRect().height")
+        page.evaluate("""() => { window.__h = new Set(); window.__top = new Set();
+          const ta = document.querySelector('#ask'), s = document.querySelector('.scroller');
+          new ResizeObserver(() => window.__h.add(ta.getBoundingClientRect().height)).observe(ta);
+          const tick = () => { window.__h.add(ta.getBoundingClientRect().height); requestAnimationFrame(tick); }; tick(); }""")
+        for _ in range(len(text)):
+            page.keyboard.press("a")
+        page.wait_for_timeout(100)
+        hs = page.evaluate("[...window.__h]")
+        check(f"{sid} ({w}px): input height is set for the full sentence on tap and never changes while typing",
+              len(hs) == 1 and hs[0] == h0 and h0 > 44 and page.input_value("#ask") == text, (h0, hs))
+        page.context.close()
+
+    page = run.page("S06")
+    page.tap(".mic"); page.wait_for_timeout(300)
+    page.tap(".voice-pill", force=True)
+    page.wait_for_selector(".bubble-loading")
+    page.tap(".voice-x")
+    page.wait_for_timeout(300)
+    info = page.evaluate("""() => { const ta = document.querySelector('#ask'), r = ta.getBoundingClientRect();
+      return [r.height, ta.scrollHeight <= ta.clientHeight + 1, ta.placeholder]; }""")
+    check("voice X after a question: 'Ask Mapture' placeholder is not pushed down or cut", info[0] == 44 and info[1], info)
+    run.shot(page, "voice-x-placeholder")
+    check("no page errors", not page.errors, page.errors)
+    page.context.close()
+
+
+def t_store(run):
+    """스토어 화면: 세로 스크롤(리뷰·설명), 정보 줄·Preview 가로 넘기기, GET 말고는 반응 없음"""
+    page = run.page("S04", 390, 844)
+    info = page.evaluate("""() => { const s = document.querySelector('.store'), i = document.querySelector('.store-info'),
+        p = document.querySelector('.store-shots');
+      return { v: s.scrollHeight > s.clientHeight + 300, h1: i.scrollWidth > i.clientWidth, h2: p.scrollWidth > p.clientWidth,
+               reviews: document.querySelectorAll('.store-review').length, rating: document.querySelector('.store-rating-big').innerText }; }""")
+    check("store scrolls vertically down to Ratings & Reviews and the description",
+          info["v"] and info["reviews"] >= 2 and "4.9" in info["rating"] and "out of 5" in info["rating"]
+          and "Mapture 6" in page.inner_text(".store-desc"), info)
+    check("info row and Preview row can be swiped sideways", info["h1"] and info["h2"], info)
+    page.evaluate("document.querySelector('.store-info').scrollLeft = 200")
+    page.wait_for_timeout(500)
+    check("info row actually scrolls sideways", page.evaluate("document.querySelector('.store-info').scrollLeft") > 50)
+    # GET 말고는 반응 없음
+    for sel in [".store-top .store-round[aria-label=Share]", ".store-tabs > div >> nth=0", ".store-event", ".store-review >> nth=0"]:
+        page.locator(sel).tap(force=True)
+    page.locator(".store-top .store-round[aria-label=Back]").tap()
+    page.wait_for_timeout(300)
+    check("tapping anything but GET does nothing", page.locator(".overlay-download").count() == 1 and page.locator(".sheet").count() == 0
+          and page.inner_text(".store-btn") == "GET" and page.locator(".overlay").count() == 1)
+    # 스크롤해서 본문 GET이 가려지면 상단 바에 작은 GET이 나타나고, 같은 동작을 한다
+    page.evaluate("document.querySelector('.store').scrollTop = 0")
+    page.wait_for_timeout(400)
+    check("top bar has no mini GET at the top of the page", not page.locator(".store-mini-btn").is_visible())
+    page.evaluate("document.querySelector('.store').scrollTop = 900")
+    page.wait_for_timeout(400)
+    check("scrolled down: a small GET appears in the top bar", page.locator(".store-mini-btn").is_visible())
+    run.shot(page, "store-scrolled")
+    page.tap(".store-mini-btn")
+    page.wait_for_timeout(300)
+    check("mini GET starts the download (ring in both places)", page.locator(".store-mini .store-ring").is_visible()
+          and page.evaluate("!document.querySelector('.store-action .store-ring').hidden"))
+    page.wait_for_function("document.querySelector('.store-mini-btn').textContent === 'OPEN'", timeout=8000)
+    page.evaluate("document.querySelector('.store').scrollTop = 0")
+    page.wait_for_timeout(300)
+    check("both buttons show OPEN", page.inner_text(".store-btn") == "OPEN")
+    page.tap(".store-btn")
+    page.wait_for_selector(".overlay", state="detached", timeout=6000)
+    check("OPEN launches into the chat", page.locator(".empty").is_visible())
+    run.shot(page, "store-end")
+    page.context.close()
+    page = run.page("S04", 360, 740)
+    page.evaluate("document.querySelector('.store').scrollTop = 1e5")
+    page.wait_for_timeout(300)
+    last = page.evaluate("[document.querySelector('.store-dev-row').getBoundingClientRect().bottom, document.querySelector('.store-tabs').getBoundingClientRect().top]")
+    check("bottom of the page is not hidden behind the tab bar", last[0] <= last[1], last)
+    run.shot(page, "store-bottom-360")
+    check("no page errors", not page.errors, page.errors)
+    page.context.close()
+
+
 def voice_layout(page, state):
     """음성 모드 구조: 떠 있는 컨트롤(같은 위치·크기), 목록은 화면 맨 아래까지, 배경 초록은 듣는 중에만"""
     info = page.evaluate("""() => {
@@ -363,7 +449,7 @@ def t_voice(run):
     check("store info row: the fourth cell is cut off at the right edge", cut)
     over = page.evaluate("""() => [...document.querySelectorAll('#app *')].filter(el => {
       const r = el.getBoundingClientRect();  // 정보 줄과 Preview 줄은 옆으로 넘기는 줄이라 일부러 오른쪽에서 잘린다
-      return r.width > 0 && (r.right > innerWidth + 0.5 || r.left < -0.5) && !el.closest('svg, .store-info, .store-shots');
+      return r.width > 0 && (r.right > innerWidth + 0.5 || r.left < -0.5) && !el.closest('svg, .store-info, .store-shots, .store-reviews');
     }).map(el => el.className || el.tagName).slice(0, 5)""")
     check("store page fits, no other overflow", not over, over)
     run.shot(page, "download-360")
@@ -371,8 +457,8 @@ def t_voice(run):
     page.wait_for_timeout(900)
     run.shot(page, "download-progress-360")
     check("GET turns into a progress ring with a stop square, no percentage",
-          page.locator(".store-ring").is_visible() and not page.locator(".store-btn").is_visible()
-          and page.locator(".store-ring rect").count() == 1 and "%" not in page.inner_text(".store"))
+          page.locator(".store-action .store-ring").is_visible() and not page.locator(".store-btn").is_visible()
+          and page.locator(".store-action .store-ring rect").count() == 1 and "%" not in page.inner_text(".store-action") + page.inner_text(".store-top"))
     page.wait_for_function("document.querySelector('.store-btn')?.textContent === 'OPEN'", timeout=8000)
     run.shot(page, "download-open-360")
     page.tap(".store-btn")
@@ -475,8 +561,9 @@ def t_voice(run):
     run.shot(page, "done-360")
     page.tap(".done-btn")
     page.wait_for_selector(".overlay", state="detached")
-    check("after payment: back in the same chat, plan shows Premium",
-          page.inner_text("[data-ref=plan]") == "Premium" and page.locator(".bubble-mapture").count() == answers)
+    check("after payment: back in the same chat, plan shows Premium, Upgrade button hidden",
+          page.inner_text("[data-ref=plan]") == "Premium" and page.locator(".bubble-mapture").count() == answers
+          and not page.locator(".bubble-btn.upgrade").is_visible())
     check("S04 no errors", not page.errors, page.errors)
     page.context.close()
 
@@ -579,9 +666,13 @@ def t_chain(run):
     check("earlier scene's divider shows an earlier day, not Today", labels and not labels[0].startswith("Today"), labels)
     check("opens scrolled to the newest message",
           page.evaluate("(() => { const s = document.querySelector('.scroller'); return s.scrollHeight - s.scrollTop - s.clientHeight < 2; })()"))
-    page.locator(".bubble-btn").first.tap()
-    page.wait_for_timeout(300)
-    check("old Upgrade button from an earlier scene is inert", page.locator(".overlay").count() == 0)
+    check("plan is Premium: the old Upgrade to Premium button is hidden", page.locator(".bubble-btn.upgrade").count() == 1
+          and not page.locator(".bubble-btn.upgrade").is_visible())
+    want = page.evaluate("""(() => { const d = new Date(); d.setDate(d.getDate() - 8);
+      const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], D = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      return [M[d.getMonth()] + ' ' + d.getDate(), D[d.getDay()]]; })()""")
+    check("S04 seen from S06: date rewound by the gaps (7d + 1d), time fixed to S04's phoneTime 9:22 PM",
+          labels[0] == f"{want[0]} 9:22 PM" and labels[1] == f"{want[0]} 9:23 PM", labels)
     page.locator(".report-link").first.tap()
     page.wait_for_selector(".overlay-report")
     asked = page.inner_text(".report-q .cap")
@@ -603,8 +694,11 @@ def t_chain(run):
     this_year = page.evaluate("new Date().getFullYear()")
     check("S15 carries every earlier question exactly once", page.locator(".bubble-user").count() == expect_users,
           f"{page.locator('.bubble-user').count()} vs {expect_users}")
-    check("two-years-earlier scenes are dated with the year; same-day S14 stays Today",
-          any(re.search(rf", ({this_year - 2}|{this_year - 3})", l) for l in labels) and labels[-1].startswith("Today"), labels[:2] + labels[-2:])
+    check("no divider shows a year (the film is set in 2040); same-day S14 stays Today",
+          not any(re.search(r"\b(19|20)\d\d\b", l) for l in labels) and labels[-1].startswith("Today"), labels[:2] + labels[-2:])
+    times = {sid: scenes[sid]["phoneTime"] for sid in ("S07", "S08", "S09", "S11")}
+    check("each earlier scene's divider uses that scene's phoneTime", all(any(l.endswith(" " + t) for l in labels) for t in times.values()),
+          (times, labels))
     hobby = page.evaluate("[...document.querySelectorAll('.list-title')].filter(e => e.textContent === 'Low-risk hobbies').length")
     check("no duplicated answers (hobby list appears once)", hobby == 1, hobby)
     check("no overflow with the long chained history", not no_overflow(page), no_overflow(page))
@@ -628,7 +722,8 @@ def t_chain(run):
     page.tap(".pay-cta"); page.wait_for_selector(".done"); page.tap(".done-btn")
     page.wait_for_selector(".overlay", state="detached")
     check("S05: after payment the S04 conversation is underneath, plan Premium",
-          page.locator(".bubble-btn").count() == 1 and page.inner_text("[data-ref=plan]") == "Premium")
+          page.locator(".bubble-user").count() > 0 and not page.locator(".bubble-btn.upgrade").is_visible()
+          and page.inner_text("[data-ref=plan]") == "Premium")
     page.context.close()
 
     page = run.page("S06")  # solo
@@ -868,7 +963,9 @@ def t_notice(run):
     check("S13d: card drops in about 1s after the scene starts", hidden_first and n.is_visible() and "73.39%" in n.inner_text()
           and "▲ 0.51" in n.inner_text(), n.inner_text() if n.is_visible() else "hidden")
     up = page.evaluate("getComputedStyle(document.querySelector('.notice-delta')).color")
-    check("▲ uses the up colour", up == "rgb(31, 95, 191)", up)
+    check("▲ uses the up colour token (Korean style: red)", up == "rgb(217, 48, 37)", up)
+    tokens = page.evaluate("[getComputedStyle(document.documentElement).getPropertyValue('--up').trim(), getComputedStyle(document.documentElement).getPropertyValue('--down').trim()]")
+    check("arrow colours come from the --up / --down tokens", tokens == ["#D93025", "#1F5FBF"], tokens)
     prog = page.locator(".bubble-mapture.progress").all_inner_texts()
     check("S#13 cards never become chat messages (also not from earlier cuts)",
           not any(v in t for t in prog for v in ("69.53%", "73.22%", "72.88%", "73.39%", "71.23%")), prog)
@@ -947,7 +1044,7 @@ def t_pwa(run):
     page.context.close()
 
 
-TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "voice": t_voice, "vscroll": t_voice_scroll, "voicex": t_voice_x, "auto": t_autosubmit,
+TESTS = {"empty": t_empty, "typing": t_typing, "ime": t_ime, "long": t_long_input, "inputh": t_input_height, "store": t_store, "voice": t_voice, "vscroll": t_voice_scroll, "voicex": t_voice_x, "auto": t_autosubmit,
          "chain": t_chain, "open": t_open, "guard": t_guard, "paywall": t_paywall, "overlaymenu": t_overlay_menu, "menu": t_menu, "notice": t_notice, "compare": t_compare, "json": t_json_error, "pwa": t_pwa}
 
 

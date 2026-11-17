@@ -143,6 +143,9 @@ python3 -m http.server 8000
   - X를 누르면 일반 입력창으로 돌아갑니다.
 - **답변 출력 중** 말풍선을 탭하면 남은 글자가 즉시 전부 표시됩니다.
 - **S#4:** iPhone 앱 스토어 구조의 스토어 화면 → `GET` → 원형 진행 링(4초, `downloadSeconds`로 조절) → `OPEN` → 스토어 카드가 왼쪽으로 밀려 나가고, 마스코트가 보이는 맵쳐 카드가 들어와 전체 화면으로 커짐 → 바로 인사 화면 (약 1초). 마지막 `Upgrade to Premium`을 누르면 결제 화면으로 이어집니다.
+  스토어 화면은 세로로 스크롤되고(평점·리뷰·설명까지), 정보 줄과 Preview 줄은 옆으로 넘길 수 있습니다. GET 말고는 눌러도 반응이 없습니다.
+  아래로 스크롤해 GET이 가려지면 상단 바에 작은 GET이 나타나서, 스크롤한 채로 바로 누를 수 있습니다.
+- **Upgrade 버튼:** 플랜이 Premium이면 보이지 않습니다 (결제 직후, 이후 씬에 이어 붙은 대화 모두).
 - **결제:** 요금 카드를 탭해 고르고 `Subscribe for …` → 완료 화면 → `Start predicting`. 이후 상단 플랜이 `Premium`으로 바뀝니다.
 - **리포트:** 답변 아래 `Detailed Analysis Report ›`를 탭. 왼쪽 위 뒤로 가기로 같은 대화로 돌아옵니다.
 - **확률 공지 카드:** S#9는 처음부터, S#13은 씬 시작 1초 뒤 상단 바 아래에 카드가 내려옵니다. X로 닫을 수 있고 채팅 기록에는 남지 않습니다.
@@ -167,14 +170,17 @@ Android 뒤로 가기로 앱이 닫히는 것, 번역 제안, 자동 다크 모�
 - `id`, `title`(씬 메뉴에 표시), `start`(`chat` / `download` / `paywall`: 첫 화면), `plan`, `profile`, `textScale`
 - `after`: 앞 씬의 id. 그 씬(과 그 앞 씬들)의 대화가 이 씬 위에 이어 붙습니다. 없으면 이 씬만 열립니다.
 - `gap`: 앞 씬으로부터 지난 시간 (`"30m"`, `"3h"`, `"2d"`, `"1w"`, `"2y"`). 앞 씬 대화의 시간 구분선이 그만큼 과거로 표시됩니다
-  (`Yesterday 9:22 PM` → `Mon 9:22 PM` → `Nov 3 9:22 PM` → `Nov 16, 2024 9:22 PM`).
+  (`Yesterday 9:22 PM` → `Mon 9:22 PM` → `Nov 3 9:22 PM`, 연도는 표시하지 않음 — 영화 배경이 2040년).
+  **이어 붙은 앞 씬의 구분선:** 날짜는 gap만큼 되감고, 시각은 그 씬의 `phoneTime`으로 고정합니다 (예: S06에서 본 S04 = 8일 전 9:22 PM).
+  지금 씬의 구분선은 기기 시각(상태바 시계와 같음)이라, 촬영 때 폰 시각을 그 씬의 `phoneTime`에 맞추면 전부 자연스럽습니다.
   분·시간 단위는 **같은 날**이라는 뜻이라 자정 직후에 촬영해도 `Today`로 남습니다. 날짜를 넘기려면 `d`·`w`·`y`를 쓰세요.
 - `downloadSeconds`: 스토어 화면의 다운로드 진행 링이 차는 시간 (기본 4초)
 - `notice`: 상단 바 아래에 떠 있는 확률 공지 카드. 있을 때만 표시되고 채팅 기록에는 남지 않습니다.
   `{"value":"71.23%","delta":"0.10","up":true,"size":"compact","appear":"start"}`.
   `size`는 `compact`(기본) / `large`(숫자만 크게), `appear`는 `start`(씬 시작부터, 기본) / `drop`(씬 시작 1초 뒤 위에서 내려옴, `delay`초로 조절).
   `label`(기본 `Current Probability of Success`), `sub`(large에서 문구 아래 작은 글, 예: `Updated 2 min ago`)도 쓸 수 있습니다.
-- `phoneTime`: 촬영 때 맞출 폰 시각. 앱은 쓰지 않고 큐시트에만 나옵니다.
+- `phoneTime`: 그 씬의 대본 시각(`"9:22 PM"`). 촬영 때 폰 시각을 여기에 맞춥니다(큐시트에 표시).
+  앱은 이 씬이 다른 씬에 이어 붙을 때 구분선 시각으로 씁니다.
 - `history`: 이 씬에만 미리 깔아 둘 메시지 (앞 씬 대화 다음에 즉시 표시)
 - `steps`: 순서대로 재생
 
@@ -193,7 +199,7 @@ Android 뒤로 가기로 앱이 닫히는 것, 번역 제안, 자동 다크 모�
 
 - `loading`: `{"seconds":2,"text":"One moment, please…","progressBar":false}`. 생략하면 2초 기본 로딩.
 - `headline`: `{"label":"...","value":"71.13%","delta":"0.08","up":false,"size":"normal"}`.
-  `size`는 `normal`/`huge`. `up`이 `true`면 ▲(파랑), `false`면 ▼(주황), `up`과 `delta`를 둘 다 빼면 화살표 없음.
+  `size`는 `normal`/`huge`. `up`이 `true`면 ▲(빨강), `false`면 ▼(파랑) — 한국식. 색은 `css/app.css` 맨 위의 `--up`/`--down` 두 줄에서 바꿉니다. `up`과 `delta`를 둘 다 빼면 화살표 없음.
 - `body`: 본문. 빈 줄(`\n\n`)로 문단을 나눌 수 있음.
 - `compare`: 두 항목을 한 줄에 나란히 보여 주는 비교 블록 (본문 바로 아래).
   `{"items":[{"label":"AI Workflow Development","value":"70.98%"},{"label":"Introduction to New Media","value":"70.97%"}],"diff":"Difference: 0.01 percentage points"}`

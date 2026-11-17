@@ -33,9 +33,26 @@ export function durationMs(value) {
   return m ? Number(m[1]) * UNIT[m[2]] : 0;
 }
 
+/** "9:22 PM" → { h: 21, m: 22 }. 형식이 틀리면 null */
+export function parseClock(value) {
+  const m = /^\s*(\d{1,2}):(\d{2})\s*([AaPp])\.?\s*[Mm]\.?\s*$/.exec(String(value ?? ''));
+  if (!m) return null;
+  const h = Number(m[1]) % 12 + (/[Pp]/.test(m[3]) ? 12 : 0);
+  const min = Number(m[2]);
+  return h < 24 && min < 60 ? { h, m: min } : null;
+}
+
+/** gap을 "며칠 전"으로 (날짜만 되감을 때). 분·시간 단위는 같은 날(0일), 24시간 이상이면 그만큼의 날 수 */
+export function gapDays(value) {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*([mhdwy])\s*$/.exec(String(value ?? ''));
+  if (!m) return 0;
+  const ms = Number(m[1]) * UNIT[m[2]];
+  return /[mh]/.test(m[2]) ? Math.floor(ms / 86400e3) : Math.round(ms / 86400e3);
+}
+
 /**
- * 구분선용. 오늘에서 멀어질수록 날짜가 구체적으로 바뀐다:
- *   Today 9:22 PM / Yesterday 9:22 PM / Mon 10:05 AM (6일 이내) / Nov 3 9:22 PM / Nov 16, 2024 9:22 PM
+ * 구분선용. 오늘에서 멀어질수록 날짜가 구체적으로 바뀐다. 연도는 쓰지 않는다 (영화 배경이 2040년):
+ *   Today 9:22 PM / Yesterday 9:22 PM / Mon 10:05 AM (6일 이내) / Nov 3 9:22 PM / Aug 25 10:59 AM
  * @param now "now" 값이 가리킬 시각 (이어 붙인 앞 씬의 대화는 그 씬의 시각)
  */
 export function dividerLabel(value, sceneStart, now) {
@@ -50,7 +67,7 @@ export function dividerLabel(value, sceneStart, now) {
   else if (diff === 1) day = 'Yesterday';
   else if (diff === -1) day = 'Tomorrow';
   else if (diff > 1 && diff < 7) day = DAYS[t.getDay()];
-  else day = `${MONTHS[t.getMonth()]} ${t.getDate()}${t.getFullYear() !== today.getFullYear() ? ', ' + t.getFullYear() : ''}`;
+  else day = `${MONTHS[t.getMonth()]} ${t.getDate()}`;
   return `${day} ${formatClock(t)}`;
 }
 
