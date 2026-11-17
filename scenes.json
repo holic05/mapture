@@ -2,7 +2,7 @@
   "version": 2,
   "scenes": [
     {
-      "id": "S03", "title": "S#3 Café — Jaeseong's phone", "start": "chat", "plan": "Premium", "profile": "J", "phoneTime": "3:30 PM",
+      "id": "S03", "title": "S#3 Café — Jaeseong's phone", "start": "chat", "plan": "Premium", "profile": "J", "date": "2040-09-13", "phoneTime": "3:30 PM",
       "history": [
         {"type": "divider", "time": "-3h"},
         {"type": "user", "input": "typing", "text": "Will it rain this afternoon?", "note": "[TODO: 작가 확인] 임시 대화 (이전 대화 예시)"},
@@ -18,7 +18,7 @@
       ]
     },
     {
-      "id": "S04", "title": "S#4 Café — first use", "start": "download", "plan": "Free", "profile": "E", "phoneTime": "9:22 PM", "downloadSeconds": 4,
+      "id": "S04", "title": "S#4 Café — first use", "start": "download", "plan": "Free", "profile": "E", "date": "2040-09-13", "phoneTime": "9:22 PM", "downloadSeconds": 4,
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -36,7 +36,7 @@
       ]
     },
     {
-      "id": "S04b", "title": "S#4 Café — retake from 10-year question", "start": "chat", "plan": "Free", "profile": "E", "phoneTime": "9:47 PM",
+      "id": "S04b", "title": "S#4 Café — retake from 10-year question", "start": "chat", "plan": "Free", "profile": "E", "date": "2040-09-13", "phoneTime": "9:47 PM",
       "history": [
         {"type": "divider", "time": "-25m"},
         {"type": "user", "input": "voice", "text": "Is anyone going to contact me tonight?"},
@@ -59,12 +59,12 @@
       ]
     },
     {
-      "id": "S05", "title": "S#5 Classroom — payment", "start": "paywall", "plan": "Free", "profile": "E", "phoneTime": "11:05 AM", "after": "S04", "gap": "7d",
+      "id": "S05", "title": "S#5 Classroom — payment", "start": "paywall", "plan": "Free", "profile": "E", "date": "2040-09-20", "phoneTime": "11:05 AM", "after": "S04",
       "history": [],
       "steps": []
     },
     {
-      "id": "S06", "title": "S#6 Montage — voice Q&A", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "2:15 PM", "after": "S05", "gap": "1d",
+      "id": "S06", "title": "S#6 Montage — voice Q&A", "start": "chat", "plan": "Premium", "profile": "E", "date": "2040-09-21", "phoneTime": "2:15 PM", "after": "S05",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -82,7 +82,7 @@
       ]
     },
     {
-      "id": "S07", "title": "S#7 Daehangno — night", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "7:10 PM", "after": "S06", "gap": "3d",
+      "id": "S07", "title": "S#7 Daehangno — night", "start": "chat", "plan": "Premium", "profile": "E", "date": "2040-09-24", "phoneTime": "7:10 PM", "after": "S06",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -91,7 +91,7 @@
       ]
     },
     {
-      "id": "S08", "title": "S#8 Restaurant — concert", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "7:40 PM", "after": "S07", "gap": "30m",
+      "id": "S08", "title": "S#8 Restaurant — concert", "start": "chat", "plan": "Premium", "profile": "E", "date": "2040-09-24", "phoneTime": "7:40 PM", "after": "S07",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -100,12 +100,12 @@
       ]
     },
     {
-      "id": "S09", "title": "S#9 Study room", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "2:40 PM", "after": "S08", "gap": "4d", "notice": {"value": "71.23%", "delta": "0.10", "up": true, "size": "compact"},
+      "id": "S09", "title": "S#9 Study room", "start": "chat", "plan": "Premium", "profile": "E", "date": "2040-09-28", "phoneTime": "2:40 PM", "after": "S08", "notice": {"value": "71.23%", "delta": "0.10", "up": true, "size": "compact"},
       "history": [
         {"type": "divider", "time": "-2d 11:14 PM"},
         {"type": "user", "input": "typing", "text": "What should I review tonight to stay on track for the certification exam?", "note": "[TODO: 작가 확인] 3차 더미 대화 (목업 S09-Notice 문구)"},
         {"type": "mapture", "body": "Based on your study history, reviewing Chapter 4 (Labor Relations Law) tonight has a 78.4% probability of improving your next mock test score!", "note": "[TODO: 작가 확인] 3차 더미 대화 (목업 S09-Notice 문구)"},
-        {"type": "divider", "time": "-0d 1:32 PM"},
+        {"type": "divider", "time": "-1h"},
         {"type": "user", "input": "typing", "text": "How long should I study before taking a break?", "note": "[TODO: 작가 확인] 3차 더미 대화 (목업 S09-Notice 문구)"},
         {"type": "mapture", "body": "Based on your concentration patterns, studying for 50 more minutes before a 5-minute break is optimal!", "note": "[TODO: 작가 확인] 3차 더미 대화 (목업 S09-Notice 문구)"}
       ],
@@ -118,7 +118,7 @@
       ]
     },
     {
-      "id": "S10", "title": "S#10 Library — book list", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "3:10 PM", "textScale": 1.3, "after": "S09", "gap": "30m",
+      "id": "S10", "title": "S#10 Library — book list", "start": "chat", "plan": "Premium", "profile": "E", "date": "2040-09-28", "phoneTime": "3:10 PM", "textScale": 1.3, "after": "S09",
       "history": [
         {"type": "divider", "time": "-2m"},
         {"type": "user", "input": "typing", "text": "Recommend books for me."},
@@ -127,17 +127,17 @@
       "steps": []
     },
     {
-      "id": "S11", "title": "S#11 Emily's room — course comparison", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "10:48 PM", "after": "S10", "gap": "20w",
+      "id": "S11", "title": "S#11 Emily's room — course comparison", "start": "chat", "plan": "Premium", "profile": "E", "date": "2041-03-04", "phoneTime": "10:48 PM", "after": "S10",
       "history": [
-        {"type": "divider", "time": "-118d 12:40 PM"},
-        {"type": "user", "input": "typing", "text": "Should I go see the cherry blossoms at Yeouido this weekend?", "note": "[TODO: 작가 확인] 3차 더미 대화 초안"},
-        {"type": "mapture", "body": "Based on crowd forecasts and your study schedule, a 25-minute visit on Saturday at 8:10 a.m. keeps the impact on your probability of success under 0.01 percentage points!", "note": "[TODO: 작가 확인] 3차 더미 대화 초안"},
-        {"type": "divider", "time": "-6d 9:15 PM"},
-        {"type": "user", "input": "typing", "text": "When does course registration open for next semester?", "note": "[TODO: 작가 확인] 3차 더미 대화 초안"},
-        {"type": "mapture", "body": "Course registration opens on Monday at 10:00 a.m. There is a 91.2% probability that the courses you want will be full within 4 minutes!", "note": "[TODO: 작가 확인] 3차 더미 대화 초안"},
-        {"type": "divider", "time": "-1d 11:32 PM"},
-        {"type": "user", "input": "typing", "text": "What time should I log in on registration day?", "note": "[TODO: 작가 확인] 3차 더미 대화 초안"},
-        {"type": "mapture", "body": "Logging in at 9:58 a.m. gives you a 96.5% probability of securing all of your first-choice courses!", "note": "[TODO: 작가 확인] 3차 더미 대화 초안"}
+        {"type": "divider", "time": "-140d 4:30 PM"},
+        {"type": "user", "input": "typing", "text": "Should I join a study group for the certification exam?", "note": "[TODO: 작가 확인] 더미 대화 초안 (S10→S11)"},
+        {"type": "mapture", "body": "Based on an analysis of your study patterns and those of the group members, joining the study group has a 64.3% probability of raising your exam score, and could increase your probability of success ten years from now by 0.12 percentage points!", "note": "[TODO: 작가 확인] 더미 대화 초안 (S10→S11)"},
+        {"type": "divider", "time": "-100d 9:05 PM"},
+        {"type": "user", "input": "typing", "text": "Is a part-time job this break worth it?", "note": "[TODO: 작가 확인] 더미 대화 초안 (S10→S11)"},
+        {"type": "mapture", "body": "Based on the goals you've set, a part-time job this break is generally not recommended. The income would not make up for the 0.37 percentage-point decrease in your long-term probability of success. Instead, I recommend spending the break preparing for your certification exam!", "note": "[TODO: 작가 확인] 더미 대화 초안 (S10→S11)"},
+        {"type": "divider", "time": "-85d 11:40 PM"},
+        {"type": "user", "input": "typing", "text": "What should I eat to stay focused during exams?", "note": "[TODO: 작가 확인] 더미 대화 초안 (S10→S11)"},
+        {"type": "mapture", "body": "A banana and a handful of almonds! There is an 81.7% probability that your concentration will last 40 minutes longer.", "note": "[TODO: 작가 확인] 더미 대화 초안 (S10→S11)"}
       ],
       "steps": [
         {"type": "divider", "time": "now"},
@@ -146,32 +146,32 @@
       ]
     },
     {
-      "id": "S13a", "title": "S#13 Montage — cut a (69.53%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "9:15 AM", "after": "S11", "gap": "3w", "notice": {"value": "69.53%", "delta": "1.45", "up": false, "appear": "drop"},
+      "id": "S13a", "title": "S#13 Montage — cut a (69.53%)", "start": "chat", "plan": "Premium", "profile": "E", "date": "2041-03-25", "phoneTime": "9:15 AM", "after": "S11", "notice": {"value": "69.53%", "delta": "1.45", "up": false, "appear": "drop"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S13b", "title": "S#13 Montage — cut b (73.22%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "1:40 PM", "after": "S13a", "gap": "3w", "notice": {"value": "73.22%", "delta": "3.69", "up": true, "appear": "drop"},
+      "id": "S13b", "title": "S#13 Montage — cut b (73.22%)", "start": "chat", "plan": "Premium", "profile": "E", "date": "2041-04-17", "phoneTime": "1:40 PM", "after": "S13a", "notice": {"value": "73.22%", "delta": "3.69", "up": true, "appear": "drop"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S13c", "title": "S#13 Montage — cut c (72.88%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "4:25 PM", "after": "S13b", "gap": "3w", "notice": {"value": "72.88%", "delta": "0.34", "up": false, "appear": "drop"},
+      "id": "S13c", "title": "S#13 Montage — cut c (72.88%)", "start": "chat", "plan": "Premium", "profile": "E", "date": "2041-05-09", "phoneTime": "4:25 PM", "after": "S13b", "notice": {"value": "72.88%", "delta": "0.34", "up": false, "appear": "drop"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S13d", "title": "S#13 Montage — cut d (73.39%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "11:05 PM", "after": "S13c", "gap": "3w", "notice": {"value": "73.39%", "delta": "0.51", "up": true, "appear": "drop"},
+      "id": "S13d", "title": "S#13 Montage — cut d (73.39%)", "start": "chat", "plan": "Premium", "profile": "E", "date": "2041-05-28", "phoneTime": "11:05 PM", "after": "S13c", "notice": {"value": "73.39%", "delta": "0.51", "up": true, "appear": "drop"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S13e", "title": "S#13 Montage — cut e (74.11%)", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "8:30 AM", "after": "S13d", "gap": "3w", "notice": {"value": "74.11%", "delta": "0.72", "up": true, "appear": "drop", "note": "[TODO: 작가 확인] 대본은 ▼인데 숫자는 73.39 → 74.11로 오름. 지금은 ▲ 0.72로 표시"},
+      "id": "S13e", "title": "S#13 Montage — cut e (74.11%)", "start": "chat", "plan": "Premium", "profile": "E", "date": "2041-06-21", "phoneTime": "8:30 AM", "after": "S13d", "notice": {"value": "74.11%", "delta": "0.72", "up": true, "appear": "drop", "note": "[TODO: 작가 확인] 대본은 ▼인데 숫자는 73.39 → 74.11로 오름. 지금은 ▲ 0.72로 표시"},
       "history": [],
       "steps": []
     },
     {
-      "id": "S14", "title": "S#14 Café — two years later", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "2:10 PM", "after": "S13e", "gap": "2y",
+      "id": "S14", "title": "S#14 Café — two years later", "start": "chat", "plan": "Premium", "profile": "E", "date": "2043-06-12", "phoneTime": "2:10 PM", "after": "S13e",
       "history": [
         {"type": "divider", "time": "-690d 4:20 PM"},
         {"type": "user", "input": "typing", "text": "Which courses should I take next semester to stay on track?", "note": "[TODO: 작가 확인] 3차 더미 대화 초안"},
@@ -192,7 +192,7 @@
       "steps": []
     },
     {
-      "id": "S15", "title": "S#15 Campus bench — Send does not respond", "start": "chat", "plan": "Premium", "profile": "E", "phoneTime": "2:40 PM", "after": "S14", "gap": "30m",
+      "id": "S15", "title": "S#15 Campus bench — Send does not respond", "start": "chat", "plan": "Premium", "profile": "E", "date": "2043-06-12", "phoneTime": "2:40 PM", "after": "S14",
       "history": [],
       "steps": [
         {"type": "divider", "time": "now"},

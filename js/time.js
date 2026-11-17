@@ -1,5 +1,10 @@
 // scenes.json의 시각 값 처리
-//   "now"            → 그 메시지가 표시되는 순간의 기기 시각
+//
+// 날짜는 극 중 달력, 시각만 폰 시계:
+//   씬마다 "date"(극 중 날짜, 예: "2040-09-13")가 있다. iPhone 상태바에는 날짜가 나오지 않으므로 실제 날짜는 쓰지 않는다.
+//   지금 씬의 "지금" = 그 씬의 극 중 날짜 + 폰 시계의 시각. Today / Yesterday / 요일도 극 중 날짜로 계산한다.
+//
+//   "now"            → 그 메시지가 표시되는 순간 (극 중 날짜 + 폰 시각)
 //   "-5m" "-2h" "-1d" → 씬 시작 시각 기준 과거 (history용)
 //   "+17m"           → 씬 시작 시각 기준 미래 (리포트용)
 //   "-2d 11:14 PM"   → 씬 시작 날짜에서 이틀 전, 시각은 11:14 PM (더미 대화용. "-0d 1:32 PM" = 같은 날)
@@ -37,10 +42,20 @@ export function formatClock(date) {
   return `${h % 12 || 12}:${mm} ${h < 12 ? 'AM' : 'PM'}`;
 }
 
-/** "14h", "2d", "2y" 같은 간격을 밀리초로 (씬의 gap용). 형식이 틀리면 0 */
-export function durationMs(value) {
-  const m = /^\s*(\d+(?:\.\d+)?)\s*([mhdwy])\s*$/.exec(String(value ?? ''));
-  return m ? Number(m[1]) * UNIT[m[2]] : 0;
+/** "2040-09-13" → 그날 0시 (기기 시간대). 형식이 틀리면 null */
+export function parseDate(value) {
+  const m = /^\s*(\d{4})-(\d{2})-(\d{2})\s*$/.exec(String(value ?? ''));
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return d.getMonth() === Number(m[2]) - 1 ? d : null;
+}
+
+/** 극 중 날짜(date) + 폰 시계의 시각. date가 없으면 실제 오늘 */
+export function onStoryDate(date, clock = new Date()) {
+  const day = parseDate(date);
+  if (!day) return new Date(clock);
+  day.setHours(clock.getHours(), clock.getMinutes(), clock.getSeconds(), clock.getMilliseconds());
+  return day;
 }
 
 /** "9:22 PM" → { h: 21, m: 22 }. 형식이 틀리면 null */
@@ -52,24 +67,16 @@ export function parseClock(value) {
   return h < 24 && min < 60 ? { h, m: min } : null;
 }
 
-/** gap을 "며칠 전"으로 (날짜만 되감을 때). 분·시간 단위는 같은 날(0일), 24시간 이상이면 그만큼의 날 수 */
-export function gapDays(value) {
-  const m = /^\s*(\d+(?:\.\d+)?)\s*([mhdwy])\s*$/.exec(String(value ?? ''));
-  if (!m) return 0;
-  const ms = Number(m[1]) * UNIT[m[2]];
-  return /[mh]/.test(m[2]) ? Math.floor(ms / 86400e3) : Math.round(ms / 86400e3);
-}
-
 /**
  * 구분선용. 오늘에서 멀어질수록 날짜가 구체적으로 바뀐다. 연도는 쓰지 않는다 (영화 배경이 2040년):
  *   Today 9:22 PM / Yesterday 9:22 PM / Mon 10:05 AM (6일 이내) / Nov 3 9:22 PM / Aug 25 10:59 AM
- * @param now "now" 값이 가리킬 시각 (이어 붙인 앞 씬의 대화는 그 씬의 시각)
+ * @param now   "now" 값이 가리킬 시각 (이어 붙인 앞 씬의 대화는 그 씬의 시각)
+ * @param today 지금 씬의 "오늘" (극 중 날짜). Today·Yesterday·요일을 이 날짜 기준으로 정한다
  */
-export function dividerLabel(value, sceneStart, now) {
+export function dividerLabel(value, sceneStart, now, today = new Date()) {
   const t = resolveTime(value, sceneStart, now);
   if (t == null) return '';
   if (typeof t === 'string') return t;
-  const today = new Date();
   const dayIndex = (d) => Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 86400e3 + 0.5);
   const diff = dayIndex(today) - dayIndex(t);
   let day;

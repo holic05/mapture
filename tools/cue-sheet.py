@@ -4,6 +4,7 @@
 scenes.json을 고친 뒤 다시 실행하면 문서가 갱신된다.
 사용: python3 tools/cue-sheet.py
 """
+import datetime
 import json
 import os
 import re
@@ -27,9 +28,13 @@ def esc(text):
     return str(text).replace("|", "\\|").replace("\n", " ")
 
 
-def gap_ko(gap):
-    m = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*([mhdwy])\s*", str(gap or ""))
-    return f"{m.group(1)}{UNITS[m.group(2)]}" if m else "같은 시각"
+def date_ko(value):
+    """"2040-09-13" → "9월 13일(목)" (극 중 날짜, 연도는 화면에 나오지 않으므로 생략)"""
+    try:
+        d = datetime.date.fromisoformat(str(value))
+    except ValueError:
+        return "—"
+    return f"{d.month}월 {d.day}일({'월화수목금토일'[d.weekday()]})"
 
 
 def is_progress(step):
@@ -135,6 +140,8 @@ def scene_section(scene, by_id):
     out.append(f"- **시작 화면:** {screen}" + (f" → {under}" if start != "chat" else f", {under}"))
     scale = f", 글자 크기 ×{scene['textScale']:g}" if scene.get("textScale", 1) != 1 else ""
     out.append(f"- **상단 표시:** Mapture {scene.get('plan', 'Free')} · 프로필 `{scene.get('profile', 'E')}`{scale}")
+    if scene.get("date"):
+        out.append(f"- **극 중 날짜:** {date_ko(scene['date'])} (`{scene['date']}`). 폰 날짜는 바꿀 필요 없음 — 앱이 이 날짜로 Today·요일을 계산")
     if scene.get("phoneTime"):
         out.append(f"- **맞출 폰 시각:** **{scene['phoneTime']}** (대사 속 시각과 맞추기 위해)")
     else:
@@ -150,7 +157,7 @@ def scene_section(scene, by_id):
         out.append(f"- **공지 카드:** `{esc(nt.get('label') or 'Current Probability of Success')}` **{esc(nt.get('value', ''))}{arrow}** "
                    f"({when}, {size}, X로 닫힘, 채팅 기록에는 남지 않음)")
     if chain:
-        out.append(f"- **앞 씬({chain[-1]['id']})으로부터:** {gap_ko(scene.get('gap'))} 뒤 → 앞 씬 대화의 구분선이 그만큼 과거 날짜로 표시됨")
+        out.append(f"- **앞 씬({chain[-1]['id']}):** 극 중 {date_ko(chain[-1].get('date'))} {chain[-1].get('phoneTime', '')} → 그 날짜·시각으로 구분선에 표시됨")
 
     # 단계
     rows, total, n = [], 0.0, 0
@@ -230,14 +237,15 @@ def main():
            "- 키보드는 한글·영어 아무거나 가능. 타이핑 씬에서는 **아무 키나** 누르면 정해진 문장이 써짐",
            "- **씬 고르기:** 왼쪽 위 ☰ 를 0.6초 길게 누름 → 목록에서 선택. 같은 씬을 다시 고르면 처음 상태로 리셋 (재촬영)",
            "  - 스토어·결제·리포트 화면에서는 왼쪽 위 버튼(뒤로/닫기)을 길게 누름",
-           "- 폰 시각을 맞춰야 하는 씬은 설정 → 날짜 및 시간 → 자동 설정 끄고 직접 입력 (촬영 후 되돌리기)",
-           "- 시간 구분선과 리포트의 시각은 **촬영 순간의 폰 시각**으로 찍힘",
+           "- **폰 시각 맞추기 (iPhone):** 설정 → 일반 → 날짜 및 시간 → '자동으로 설정' 끄고 시각만 씬의 `phoneTime`으로 (촬영 후 되돌리기)",
+           "- **날짜는 극 중 달력:** iPhone 상태바에 날짜가 안 나오므로 폰 날짜는 그대로 둬도 됨. 앱이 씬마다 정해진 극 중 날짜로 Today·Yesterday·요일을 계산",
+           "- 지금 씬의 새 메시지 구분선과 리포트 시각은 **촬영 순간의 폰 시각** (`Today h:mm`). 지난 씬과 더미 대화는 정해진 날짜·시각",
            "", "## 씬 목록", "",
-           "| 씬 | 시작 화면 | 플랜 | 질문 방식 | 폰 시각 |", "|---|---|---|---|---|"]
+           "| 씬 | 시작 화면 | 플랜 | 질문 방식 | 극 중 날짜 | 폰 시각 |", "|---|---|---|---|---|---|"]
     for s in data["scenes"]:
         kinds = sorted({("음성" if st.get("input") == "voice" else "타이핑") for st in s.get("steps") or [] if st["type"] == "user"})
         start = {"download": "스토어", "paywall": "결제"}.get(s.get("start"), "채팅")
-        doc.append(f"| {s['id']} {s.get('title', '')} | {start} | {s.get('plan', 'Free')} | {' + '.join(kinds) or '없음'} | {s.get('phoneTime', '—')} |")
+        doc.append(f"| {s['id']} {s.get('title', '')} | {start} | {s.get('plan', 'Free')} | {' + '.join(kinds) or '없음'} | {date_ko(s.get('date'))} | {s.get('phoneTime', '—')} |")
     doc.append("")
     for s in data["scenes"]:
         doc.append(scene_section(s, by_id))

@@ -156,7 +156,8 @@ function validate(data) {
     else if (seen.has(scene.id)) out.push(`${name}: duplicate id`);
     seen.add(scene?.id);
     if (scene?.after != null && !data.scenes.some((x) => x?.id === scene.after)) out.push(`${name}: "after" points to unknown scene "${scene.after}"`);
-    if (scene?.gap != null && !/^\s*\d+(\.\d+)?\s*[mhdwy]\s*$/.test(String(scene.gap))) out.push(`${name}: "gap" must look like "14h", "2d" or "2y"`);
+    if (scene?.date != null && !/^\d{4}-\d{2}-\d{2}$/.test(String(scene.date))) out.push(`${name}: "date" must look like "2040-09-13"`);
+    if (scene?.phoneTime != null && !/^\d{1,2}:\d{2}\s*[AP]M$/i.test(String(scene.phoneTime))) out.push(`${name}: "phoneTime" must look like "9:22 PM"`);
     if (scene?.notice != null) {
       const n = scene.notice;
       if (typeof n !== 'object' || n.value == null) out.push(`${name}.notice: needs "value"`);

@@ -38,29 +38,22 @@
 
 ## 2. 임의로 정한 설정값 (확인 필요)
 
-### 씬 사이의 시간 간격 (`gap`)
+### 씬별 극 중 날짜 (`date`, 2026-11-18)
 
-앞 씬 대화가 이어 붙을 때, 앞 씬의 시간 구분선이 얼마나 과거로 표시될지 정합니다. 대본 기준으로 맞췄고, 대본에 없는 값은 임의입니다.
-분·시간 단위(`30m`, `3h`)는 **같은 날**을 뜻해서 구분선이 항상 `Today`로 남습니다. 날짜를 넘기려면 `d`·`w`·`y`를 씁니다.
+날짜는 **극 중 달력**, 시각만 폰 시계입니다. iPhone 상태바에는 날짜가 나오지 않으므로 실제 날짜와 무관하게 씬마다 날짜를 고정했습니다.
+지금 씬의 새 메시지만 `Today` + 폰 시각이고, 지난 씬과 더미 대화는 아래 날짜와 `phoneTime`으로 표시됩니다(연도는 화면에 안 나옴).
+Today·Yesterday·요일도 이 날짜로 계산합니다. 영화 배경이 2040년이라 2040년 가을 학기에서 시작합니다. `[TODO: 작가 확인]`
 
-| 씬 | 앞 씬 (`after`) | 지난 시간 (`gap`) | 근거 |
-|---|---|---|---|
-| S05 | S04 | 7d | 대본 "One Week Later" |
-| S06 | S05 | 1d | 임의 (미확정) |
-| S07 | S06 | 3d | 임의 (미확정) |
-| S08 | S07 | 30m | S07에서 바로 이동, 같은 날 |
-| S09 | S08 | 4d | 콘서트 당일인 일요일, S08 며칠 뒤 (4일은 임의) |
-| S10 | S09 | 30m | S09 직후, 같은 날 |
-| S11 | S10 | 20w | 벚꽃·다음 학기 수강신청, 수개월 뒤 (20주는 임의) |
-| S13a | S11 | 3w | 한 학기에 걸쳐 (컷마다 3주는 임의) |
-| S13b | S13a | 3w | 〃 |
-| S13c | S13b | 3w | 〃 |
-| S13d | S13c | 3w | 〃 |
-| S13e | S13d | 3w | 〃 |
-| S14 | S13e | 2y | 대본 "TWO YEARS LATER" |
-| S15 | S14 | 30m | S14 직후, 같은 날 |
-
-S03(재성의 폰)과 S04b(S04 재촬영용)는 다른 씬에 이어 붙지 않습니다.
+| 씬 | 극 중 날짜 | 근거 |
+|---|---|---|
+| S03 · S04 · S04b | 2040-09-13 (목) | 기준일. S03(재성의 폰)도 같은 날로 둠 |
+| S05 | 2040-09-20 (목) | 대본 "One Week Later" (S04 + 7일) |
+| S06 | 2040-09-21 (금) | S05 다음 날 (임의) |
+| S07 · S08 | 2040-09-24 (월) | 같은 날 저녁. S08 대사의 "this Sunday" 콘서트가 6일 뒤 |
+| S09 · S10 | 2040-09-28 (금) | S08 4일 뒤 (임의), 같은 날 오후 |
+| S11 | 2041-03-04 (월) | 다음 해 봄 학기 초 (수강 과목 비교) |
+| S13a~e | 2041-03-25 (월) · 04-17 (수) · 05-09 (목) · 05-28 (화) · 06-21 (금) | 봄 학기에 걸친 몽타주. 화면에 날짜가 나오지 않음 |
+| S14 · S15 | 2043-06-12 (금) | S13 약 2년 뒤, 같은 날 |
 
 ### 음성 질문 자동 올리기 (`autoSubmit`)
 
@@ -100,7 +93,7 @@ S03(재성의 폰)과 S04b(S04 재촬영용)는 다른 씬에 이어 붙지 않�
   - 설명: Mapture 6 is here — our most accurate prediction engine yet. / Ask anything about your future and get an answer you can act on, with a probability attached. Mapture analyzes your behavioral patterns, contacts, schedule and academic records to tell you what happens next, and what to do about it. / • Instant predictions, by voice or text • Long-term simulation up to 10 years ahead • Real-time Progress Updates on your probability of success
   - 정보 줄 5·6번째 칸(옆으로 넘겨야 보임): Language `EN + 41 More`, Size `212.4 MB`. Preview 세 번째 문구 `Every step, predicted` (세 번째 캡처가 Detailed Analysis Report라서).
   - Preview 이미지는 실제 앱 화면 캡처: S04 34.17% 답변 / S08 콘서트 답변 / S04 리포트 (`tools/make-previews.py`).
-- **씬별 대본 시각 (`phoneTime`, 2026-11-17 추가)** `[TODO: 작가 확인]` — 대본 원문이 없어 씬 제목·대사에서 추정. 이어 붙은 대화의 구분선 시각이 됩니다.
+- **씬별 대본 시각 (`phoneTime`, 2026-11-17 추가)** `[TODO: 작가 확인]` — 대본 원문이 없어 씬 제목·대사에서 추정. 이어 붙은 대화의 구분선 시각이 됩니다 (날짜는 위의 극 중 날짜).
 
   | 씬 | phoneTime | 근거 |
   |---|---|---|
@@ -114,16 +107,17 @@ S03(재성의 폰)과 S04b(S04 재촬영용)는 다른 씬에 이어 붙지 않�
   | S13a~e 몽타주 | 9:15 AM / 1:40 PM / 4:25 PM / 11:05 PM / 8:30 AM | 컷마다 다른 때. 화면에 시각이 나오지 않아 큐시트용 |
   | S14 카페 2년 뒤 | 2:10 PM | 낮 |
   | S15 캠퍼스 벤치 | 2:40 PM | S14 30분 뒤 |
-- **3차 더미 대화 (2026-11-17)** `[TODO: 작가 확인]` — 에밀리가 그사이에도 맵쳐를 계속 써 왔다는 흐름. 각 씬의 `history`에 들어 있고,
-  시각은 `"-2d 11:14 PM"`(그 씬 날짜에서 며칠 전 + 시각) 형식. 화면의 월·요일은 촬영 날짜에 따라 달라집니다(연도는 표시 안 함).
-  - **S08 → S09 (S09 history, 목업 S09-Notice 문구 그대로)**
+- **더미 대화 (2026-11-18 개정)** `[TODO: 작가 확인]` — 에밀리가 사소한 결정까지 맵쳐에 묻는 모습. 특정 날짜·계절·실제 장소·이벤트,
+  다음 장면을 미리 말하는 내용은 피했습니다. 각 씬의 `history`에 있고, 시각은 `"-2d 11:14 PM"`(그 씬의 극 중 날짜에서 며칠 전 + 시각) 또는
+  같은 날이면 `"-1h"`(폰 시각 기준 1시간 전 → 언제 촬영해도 항상 과거).
+  - **S08 → S09 (S09 history, 목업 S09-Notice 문구 그대로)** — 화면: `Wed 11:14 PM`, `Today (폰 시각 −1시간)`
     - `-2d 11:14 PM` What should I review tonight to stay on track for the certification exam? → Based on your study history, reviewing Chapter 4 (Labor Relations Law) tonight has a 78.4% probability of improving your next mock test score!
-    - `-0d 1:32 PM` How long should I study before taking a break? → Based on your concentration patterns, studying for 50 more minutes before a 5-minute break is optimal!
-  - **S10 → S11 (S11 history, 벚꽃 → 수강신청)**
-    - `-118d 12:40 PM` Should I go see the cherry blossoms at Yeouido this weekend? → Based on crowd forecasts and your study schedule, a 25-minute visit on Saturday at 8:10 a.m. keeps the impact on your probability of success under 0.01 percentage points!
-    - `-6d 9:15 PM` When does course registration open for next semester? → Course registration opens on Monday at 10:00 a.m. There is a 91.2% probability that the courses you want will be full within 4 minutes!
-    - `-1d 11:32 PM` What time should I log in on registration day? → Logging in at 9:58 a.m. gives you a 96.5% probability of securing all of your first-choice courses!
-  - **S13 → S14 (S14 history, 2년(730일)에 걸쳐)**
+    - `-1h` How long should I study before taking a break? → Based on your concentration patterns, studying for 50 more minutes before a 5-minute break is optimal!
+  - **S10 → S11 (S11 history)** — 화면: `Oct 15 4:30 PM`, `Nov 24 9:05 PM`, `Dec 9 11:40 PM`
+    - `-140d 4:30 PM` Should I join a study group for the certification exam? → Based on an analysis of your study patterns and those of the group members, joining the study group has a 64.3% probability of raising your exam score, and could increase your probability of success ten years from now by 0.12 percentage points!
+    - `-100d 9:05 PM` Is a part-time job this break worth it? → Based on the goals you've set, a part-time job this break is generally not recommended. The income would not make up for the 0.37 percentage-point decrease in your long-term probability of success. Instead, I recommend spending the break preparing for your certification exam!
+    - `-85d 11:40 PM` What should I eat to stay focused during exams? → A banana and a handful of almonds! There is an 81.7% probability that your concentration will last 40 minutes longer.
+  - **S13 → S14 (S14 history, 내용 유지)** — 화면: `Jul 22 4:20 PM`, `Apr 8 10:05 PM`, `Dec 4 1:15 AM`, `Jun 3 8:50 AM`
     - `-690d 4:20 PM` Which courses should I take next semester to stay on track? → Based on your goals and grade history, taking Labor Law II and HR Analytics next semester could increase your probability of success by 0.9 percentage points!
     - `-430d 10:05 PM` Compare my probability of success if I intern at Sosun Group instead of Oracle Group. → Here's how the two internships compare! [비교 블록: Oracle Group 74.80% │ Sosun Group 73.10%, Difference: 1.70 percentage points]
     - `-190d 1:15 AM` What should I emphasize in my Oracle Group interview? → Based on an analysis of 1,284 successful interviews, emphasizing your AI Labor Management Specialist certification has a 92.7% probability of impressing the panel!

@@ -399,11 +399,16 @@ def t_report_s04b(run):
 def t_content(run):
     """3차 콘텐츠: 더미 대화의 시각("-2d 11:14 PM"), S14은 질문과 87% 답변이 떠 있는 상태로 시작"""
     page = run.page(False)
-    page.clock.set_fixed_time("2026-11-17T14:40:00")  # 화요일 2:40 PM (S09 phoneTime)
+    page.clock.set_fixed_time("2026-11-17T14:40:00")  # 폰 시각 2:40 PM (S09 phoneTime). 실제 날짜는 상관없다
     run.open(page, "S09")
     labels = page.locator(".time-divider").all_inner_texts()
-    check("S09: dummy chats are dated '-2d 11:14 PM' and '-0d 1:32 PM' (Sun 11:14 PM / Today 1:32 PM)",
-          labels == ["Sun 11:14 PM", "Today 1:32 PM"] and page.locator(".bubble-user").count() == 2, labels)
+    check("S09 (story date Fri Sep 28): dummy chats '-2d 11:14 PM' and '-1h' show as Wed 11:14 PM / Today 1:40 PM",
+          labels == ["Wed 11:14 PM", "Today 1:40 PM"] and page.locator(".bubble-user").count() == 2, labels)
+    page.clock.set_fixed_time("2026-11-17T09:05:00")
+    run.open(page, "S09")
+    labels = page.locator(".time-divider").all_inner_texts()
+    check("same-day dummy chat is relative to the phone clock, so it is always in the past", labels[-1] == "Today 8:05 AM", labels)
+    page.clock.set_fixed_time("2026-11-17T14:40:00")
     run.open(page, "S14")
     labels = page.locator(".time-divider").all_inner_texts()
     last = page.locator(".bubble-mapture").last
@@ -759,11 +764,8 @@ def t_chain(run):
           page.evaluate("(() => { const s = document.querySelector('.scroller'); return s.scrollHeight - s.scrollTop - s.clientHeight < 2; })()"))
     check("plan is Premium: the old Upgrade to Premium button is hidden", page.locator(".bubble-btn.upgrade").count() == 1
           and not page.locator(".bubble-btn.upgrade").is_visible())
-    want = page.evaluate("""(() => { const d = new Date(); d.setDate(d.getDate() - 8);
-      const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], D = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-      return [M[d.getMonth()] + ' ' + d.getDate(), D[d.getDay()]]; })()""")
-    check("S04 seen from S06: date rewound by the gaps (7d + 1d), time fixed to S04's phoneTime 9:22 PM",
-          labels[0] == f"{want[0]} 9:22 PM" and labels[1] == f"{want[0]} 9:23 PM", labels)
+    check("S04 seen from S06: S04's story date (Sep 13) and phoneTime 9:22 PM, whatever the real date",
+          labels[0] == "Sep 13 9:22 PM" and labels[1] == "Sep 13 9:23 PM", labels)
     page.locator(".report-link").first.tap()
     page.wait_for_selector(".overlay-report")
     asked = page.inner_text(".report-q .cap")
@@ -796,18 +798,17 @@ def t_chain(run):
     run.shot(page, "chain-s15")
     page.context.close()
 
-    # 같은 날인 씬은 자정 직후에 촬영해도 Yesterday로 넘어가지 않는다
-    page = run.page(False, 390, 844)
-    page.clock.install(time="2026-03-10T00:10:00")
-    run.open(page, "S08", chain=True)
-    labels = page.locator(".time-divider").all_inner_texts()
-    check("shot just after midnight: same-day S07 still says Today, older scenes do not",
-          labels[-1].startswith("Today") and not labels[0].startswith("Today"), labels[:1] + labels[-2:])
-    run.open(page, "S10", chain=True)
-    labels = page.locator(".time-divider").all_inner_texts()
-    check("S10 (same day as S09): both scenes' dividers say Today",
-          labels[-1].startswith("Today") and labels[-2].startswith("Today"), labels[-4:])
-    page.context.close()
+    # 날짜는 극 중 달력: 실제 날짜가 달라도 같은 글자가 나오고, 같은 날 씬은 Today, 요일도 극 중 날짜 기준
+    seen = []
+    for real in ("2026-03-10T15:10:00", "2031-12-25T15:10:00"):  # 폰 시각 = S10 phoneTime 3:10 PM
+        page = run.page(False, 390, 844)
+        page.clock.set_fixed_time(real)
+        run.open(page, "S10", chain=True)
+        seen.append(page.locator(".time-divider").all_inner_texts())
+        page.context.close()
+    check("story calendar: the same dividers on any real date", seen[0] == seen[1], seen)
+    check("S10: same-day S09 says Today; S08 (4 days earlier, a Monday) shows its weekday",
+          seen[0][-3:] == ["Today 1:40 PM", "Today 2:40 PM", "Today 3:08 PM"] and "Mon 7:40 PM" in seen[0], seen[0][-6:])
 
     page = run.page("S05", chain=True)
     page.tap(".pay-cta"); page.wait_for_selector(".done"); page.tap(".done-btn")

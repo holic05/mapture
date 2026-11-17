@@ -1,6 +1,6 @@
 // 씬 엔진: scenes.json의 씬 하나를 순서대로 재생한다.
 // 화면 그리기는 view(js/views/chat.js)가 맡고, 여기는 "지금 몇 번째 단계인가"만 관리한다.
-import { dividerLabel, durationMs, gapDays, parseClock } from './time.js';
+import { dividerLabel, onStoryDate, parseClock, parseDate } from './time.js';
 
 const DEFAULT_LOADING_TEXT = 'One moment, please…';
 const DEFAULT_LOADING_SECONDS = 2;
@@ -54,28 +54,17 @@ export class Engine {
       s = prev;
     }
 
-    // 각 앞 씬의 시각: 날짜는 지금 씬에서 gap만큼씩 거슬러 올라가고(분·시간 단위 gap은 같은 날),
-    // 시각은 그 씬의 대본 시각(phoneTime)으로 고정한다. 예: S06에서 본 S04 대화 = 8일 전 9:22 PM.
-    // phoneTime이 없는 씬은 예전처럼 지금 시각에서 gap만큼 뺀 시각을 쓴다.
+    // 각 앞 씬의 시각 = 그 씬의 극 중 날짜(date) + 대본 시각(phoneTime). 실제 날짜·촬영 시각과 무관하다.
+    // date가 없으면 바로 뒤 씬과 같은 날, phoneTime이 없으면 정오로 본다.
     const bases = new Map();
-    let t = this.sceneStart.getTime();
-    let days = 0;
-    let later = scene;
+    let day = parseDate(scene.date) || new Date(this.sceneStart);
     for (let i = chain.length - 1; i >= 0; i--) {
       const prev = chain[i];
-      days += gapDays(later.gap);
-      const dayStart = new Date(t).setHours(0, 0, 0, 0);
-      t -= durationMs(later.gap);
-      if (/[mh]\s*$/.test(String(later.gap ?? '')) && t < dayStart) t = dayStart; // 같은 날 gap은 전날로 넘기지 않는다
-      const clock = parseClock(prev.phoneTime);
-      if (clock) {
-        const d = new Date(this.sceneStart);
-        d.setDate(d.getDate() - days);
-        d.setHours(clock.h, clock.m, 0, 0);
-        t = d.getTime();
-      }
-      bases.set(prev, new Date(t));
-      later = prev;
+      day = parseDate(prev.date) || day;
+      const clock = parseClock(prev.phoneTime) || { h: 12, m: 0 };
+      const t = new Date(day);
+      t.setHours(clock.h, clock.m, 0, 0);
+      bases.set(prev, t);
     }
 
     // 각 앞 씬이 끝나야 하는 시각 = 그다음 씬의 시작 시각
@@ -108,7 +97,7 @@ export class Engine {
 
     const gen = this.gen;
     this.scene = scene;
-    this.sceneStart = new Date();
+    this.sceneStart = this.storyNow(); // 극 중 날짜 + 폰 시각
     this.index = 0;
     this.pendingDivider = null;
 
@@ -116,7 +105,7 @@ export class Engine {
 
     // 앞 씬들의 대화 + history: 애니메이션 없이 즉시
     for (const { step, base, now, chained } of this.historyFor(scene)) {
-      if (step.type === 'divider') this.view.addDivider(dividerLabel(step.time, base, now));
+      if (step.type === 'divider') this.view.addDivider(dividerLabel(step.time, base, now, this.sceneStart));
       else if (step.type === 'user') this.view.addUser(step.text, { voice: step.input === 'voice' });
       else if (step.type === 'mapture') this.view.addMaptureInstant(step, { shownAt: now, inert: chained });
     }
@@ -139,6 +128,9 @@ export class Engine {
 
   alive(gen) { return gen === this.gen; }
 
+  /** 지금 씬의 "지금": 극 중 날짜 + 폰 시계의 시각 */
+  storyNow() { return onStoryDate(this.scene?.date); }
+
   sleep(ms) {
     return new Promise((resolve) => {
       const id = setTimeout(() => { this.timers.delete(id); resolve(); }, ms);
@@ -150,7 +142,8 @@ export class Engine {
       (그래야 "now"가 그 메시지의 시각이 되고, 첫 질문 전에는 빈 상태 화면이 유지된다) */
   flushDivider() {
     if (!this.pendingDivider) return;
-    this.view.addDivider(dividerLabel(this.pendingDivider.time, this.sceneStart), { live: true });
+    const now = this.storyNow();
+    this.view.addDivider(dividerLabel(this.pendingDivider.time, this.sceneStart, now, now), { live: true });
     this.pendingDivider = null;
   }
 
